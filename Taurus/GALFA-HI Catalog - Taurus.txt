@@ -1,0 +1,83 @@
+Title: Erratum: "The GALFA-HI Compact Cloud Catalog" (2012, ApJ, 758, 44)
+Authors: Saul D.R., Peek J.E.G., Grcevich J., Putman M.E., Douglas K.A.,
+         Korpela E.J., Stanimirovic S., Heiles C., Gibson S.J., Lee M.,
+         Begum A., Brown A.R.H., Burkhart B., Hamden E.T., Pingel N.M.,
+         Tonnesen S.
+Table: DR1 GALFA-HI Cloud Catalog
+================================================================================
+Byte-by-byte Description of file: apj517658t1_mrt.txt
+--------------------------------------------------------------------------------
+   Bytes Format Units       Label     Explanations
+--------------------------------------------------------------------------------
+   1- 14 A14    ---         ID        Cloud identifier (1)
+  16- 17 I2     h           RAh       Hour of Right Ascension (J2000) (2)
+  19- 20 I2     min         RAm       Minute of Right Ascension (J2000) (2)
+  22- 23 I2     s           RAs       Second of Right Ascension (J2000) (2)
+  25- 26 I2     deg         DEd       Degree of Declination (J2000) (2)
+  28- 29 I2     arcmin      DEm       Arcminute of Declination (J2000) (2)
+  31- 36 F6.2   deg         GLON      Galactic longitude
+  38- 43 F6.2   deg         GLAT      Galactic latitude
+  45- 49 F5.1   ---         sigmaMax  Maximum S/N of cloud (3)
+  51- 54 F4.1   arcmin      Size      Angular FWHM of cloud (4)
+  56- 62 F7.2   km/s        VLSR      Local Standard of Rest velocity (5)
+  64- 70 F7.2   km/s        VGSR      Galactic Standard of Rest velocity (6)
+  72- 76 F5.2   km/s        DelV      FWHM in velocity (7)
+  78- 82 F5.2   K           TPkb      Peak brightness temperature (8)
+  84- 86 I3     10+18/cm2   NHI       Maximum HI column density (9)
+      88 A1     ---       f_NHI       [*] Flag on NHI (10)
+  90- 95 F6.3   Jy.km/s     Stot      Total flux of cloud (11)
+  97-101 A5     ---         Pop       Cloud population classification (12)
+--------------------------------------------------------------------------------
+Note (1): Clouds are named by the right ascension (in degrees), declination,
+          and VLSR velocity of the peak in the convolved cube.
+Note (2): Of the peak in the convolved cube. Note that this is not necessarily
+          the location of peak flux, or the spatial center of the region of
+          interest (see Section 3.1).
+Note (3): In the convolved cube. This is a measure of the significance
+          of the cloud.
+Note (4): Assuming a circular cloud, 2(Area/{pi})^0.5^, where the area is that
+          of the half maximum value contour shown in the catalog images
+          (Figure 5). Due to our size constraint of 20' along any axis, the
+          selection function for elongated clouds drops below 20'.
+Note (5): Of the peak of the fit to the average spectrum.
+Note (6): Defined by VGSR=VLSR+220sin(GLON)cos(GLAT).
+Note (7): Of the fit to the average spectrum.
+Note (8): After Galactic subtraction.
+Note (9): Calculated using the fit of the spectrum through the peak of the
+          cloud in the unconvolved data.
+Note (10):
+    * = the fitting failed on the maximum spectrum thus the average column
+        density is reported as a lower limit.
+Note (11): Determined by summing over the ROI in the Galactic background
+           subtracted data.
+Note (12): Using the scheme detailed in Section 4:
+    HVC = (high velocity cloud) |VLSR| > 90 km/s and near a known HVC complex;
+     GC = (galaxy candidate) |VLSR| > 90 km/s and far from known HVC complex;
+   CLVC = (cold low-velocity cloud) |VLSR| < 90 km/s and DelV < 15 km/s;
+   WLVC = (warm low-velocity cloud) |VLSR| < 90 km/s, DelV > 15 km/s,
+          and not Q3;
+     Q3 = (warm, positive low-velocity cloud in the third Galactic quadrant)
+          90 > VLSR > 0 km/s, DelV > 15 km/s, and 270 > GLON > 180.
+--------------------------------------------------------------------------------
+ID             RAhRAmRAsDEdDEmGLON   GLAT    sigM Size VLSR    VGSR    DelV   TPkb  NHIf  Stot  Pop
+063.9+26.0-137 04 15 25 25 58 170.09 -17.69  19.5 13.5 -137.94 -101.88 23.26  0.54  23    3.655 HVC  !4
+063.9+29.1-100 04 15 37 29 06 167.77 -15.49   9.6  9.5  -98.40  -53.48 23.53  0.44   7    1.083 HVC
+064.1+26.4-118 04 16 17 26 24 169.91 -17.25  67.7  8.8 -117.66  -80.84  7.72  2.71  33    3.204 HVC  !3
+064.3+28.0-094 04 17 13 27 59 168.86 -16.01   8.8 13.4  -91.68  -50.81 19.69  0.32  12    1.514 HVC
+065.5+27.3-093 04 22 05 27 17 170.15 -15.70   6.3  7.5  -91.79  -55.57 17.07  0.33   4 *  0.391 HVC
+065.5+27.8-079 04 22 09 27 46 169.79 -15.36   8.7 11.4  -82.47  -44.88 18.55  0.46   5    1.165 WLVC
+066.2+25.2-119 04 24 41 25 10 172.19 -16.69   8.7 10.0 -119.93  -91.30 21.82  0.34   5    1.086 HVC
+066.3+26.4-116 04 25 09 26 25 171.30 -15.78   7.1  8.7 -116.28  -84.24 19.04  0.39   4    0.824 HVC
+067.2+23.6-122 04 28 49 23 35 174.08 -17.03  14.6 13.4 -122.18 -100.50 20.44  0.66  16    3.170 HVC
+068.5+25.8-144 04 33 49 25 48 173.11 -14.72   9.1  8.3 -146.55 -121.02 25.29  0.48  34    1.092 HVC
+069.7+24.5-087 04 38 49 24 32 174.86 -14.67  18.2  7.3  -87.02  -67.96  7.15  1.15  13    0.943 CLVC
+070.5+23.4-081 04 41 53 23 23 176.24 -14.86  31.8 10.2  -81.92  -67.99  6.95  1.43  16    2.569 CLVC
+070.5+23.4-081 04 41 53 23 23 176.24 -14.86  31.8 10.2  -81.92  -67.99  6.95  1.43  16    2.569 CLVC
+071.9+21.8-082 04 47 29 21 45 178.40 -14.86   6.6  8.7  -84.86  -78.91 25.00  0.33   4    0.737 WLVC
+072.1+22.0+052 04 48 13 22 02 178.27 -14.55   7.4  7.6   52.49   58.90 10.78  0.55   9    0.466 CLVC
+072.2+21.4-051 04 48 53 21 26 178.86 -14.80  26.4  6.4  -50.17  -45.95  5.76  2.26  18    0.967 CLVC
+073.5+22.8-074 04 53 53 22 47 178.48 -13.06  11.2 10.8  -74.66  -68.99 22.85  0.68  22    1.912 WLVC
+073.7+22.9-062 04 54 41 22 56 178.48 -12.82  10.0  7.0  -62.51  -56.81  7.67  0.56   6    0.391 CLVC
+073.7+21.1-071 04 54 49 21 07 179.99 -13.89   7.2  7.5  -71.56  -71.50  8.98  0.79   5    0.611 CLVC
+074.8+21.2-154 04 59 09 21 11 180.55 -13.04   6.1  8.7 -146.04 -148.10 35.04  1.01  25    2.287 HVC
+074.8+24.7-177 04 59 17 24 42 177.68 -10.92   6.4  4.9 -178.03 -169.29 16.54  0.58   2 *  0.221 HVC
