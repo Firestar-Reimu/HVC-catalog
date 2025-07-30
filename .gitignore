@@ -1,3 +1,8 @@
+# FITS images #
+###############
+*.fits
+*.fits.gz
+
 # Compiled source #
 ###################
 *.com
@@ -19,7 +24,6 @@
 *.rar
 *.tar
 *.zip
-*.fits
 
 # Logs and databases #
 ######################

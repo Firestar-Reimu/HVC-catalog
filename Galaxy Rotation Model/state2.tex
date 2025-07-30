@@ -1,0 +1,30 @@
+\documentclass{standalone}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,angles,quotes,decorations.pathreplacing,positioning}
+
+\usepackage{newtx}
+\usepackage{bm}
+\renewcommand\mathbf\bm
+
+\begin{document}
+\begin{tikzpicture}[line width=0.3mm]
+    \coordinate [label=left:GC] (O) at (0,0);
+    \coordinate [label=left:Sun] (S) at (0,2.125);
+    \draw [blue!75!black,dashed] (O) circle [radius=5cm];
+    \draw [green!50!black,dashed] (S) circle [radius=2.5cm];
+    \coordinate [label=right:$\mathrm{Q}_1$] (Q1) at (2.0217246,0.6544118);
+    \coordinate [label=left:$\mathrm{Q}_2$] (Q2) at (-2.0217246,0.6544118);
+    \draw [red!75!black] (O) -- (S) node [midway,left] {$r_\odot$};
+    \draw [blue!75!black] (O) -- (Q1) node [midway,above,sloped] {$R=r_\odot$};
+    \draw [green!50!black] (S) -- (Q1) node [midway,above,sloped] {$r_b$};
+    \draw [blue!75!black,dashed] (O) -- (Q2) node [midway,above,sloped] {$R=r_\odot$};
+    \draw [green!50!black,dashed] (S) -- (Q2) node [midway,above,sloped] {$r_b$};
+    \path (O) -- (S) -- (Q1) pic ["$l$",draw,angle radius=0.5cm,angle eccentricity=1.5] {angle = O--S--Q1};
+    \draw [red!75!black,dashed] (0,-5) -- (O) node [midway,left] {$r_{\mathrm{gal}}$};
+    \fill [color=red!75!black] (O) circle (2pt);
+    \fill [color=red!75!black] (S) circle (2pt);
+    \fill [color=red!75!black] (Q1) circle (2pt);
+    \fill [color=red!75!black] (Q2) circle (2pt);
+\end{tikzpicture}
+\end{document}
