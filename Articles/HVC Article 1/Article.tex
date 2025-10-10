@@ -1,0 +1,169 @@
+\documentclass[twocolumn,trackchanges]{aastex701}
+\usepackage{newtx}
+\usepackage{anyfontsize}
+
+\begin{document}
+
+\title{HVC Article 1}
+
+\author[orcid=0009-0000-6711-0472]{Zhijun Zhang}
+\affiliation{National Astronomical Observatories, Chinese Academy of Sciences, Beijing 100101, China}
+\affiliation{University of Chinese Academy of Sciences, Beijing 100049, China}
+\email[show]{zhangzj@nao.cas.cn}
+
+\author[0000-0001-8923-7757]{Chen Wang}
+\affiliation{Institute of Astronomy and Information, Dali University, Dali, 671003, China}
+\email[show]{wangchen@pmo.ac.cn}
+
+\author[0000-0003-3010-7661]{Di Li}
+\affiliation{National Astronomical Observatories, Chinese Academy of Sciences, Beijing 100101, China}
+\affiliation{Department of Astronomy, Tsinghua University, Beijing 100084, China}
+\affiliation{Computational Astronomy Group, Zhejiang Laboratory, Hangzhou 311100, China}
+\email[show]{dili@tsinghua.edu.cn}
+
+\begin{abstract}
+
+\end{abstract}
+
+\keywords{\uat{Interstellar medium}{847}}
+
+\section{Introduction}
+
+Since their discovery by \citet{1963CRAS..257.1661M}, High Velocity Clouds (HVCs) in the Milky Way have attracted widespread attention from the astronomical community. HVCs generally refer to neutral hydrogen clouds with high radial velocities, which are typically higher than those of ordinary atomic clouds in the galactic disk, making them incompatible with the regular rotation model of the Galactic disc (Wakker 1991). HVCs come in a wide range of sizes and shapes ranging from large complexes and streams, such as the Magellanic Stream (Mathewson, Cleary \& Murray 1974) or Complex C (Hulsbosch 1968), to (ultra) compact and isolated HVCs (CHVCs/UCHVCs; Braun \& Burton 1999; Adams, Giovanelli \& Haynes 2013).
+
+
+Oort (1966) first proposed the theory of the extragalactic origin of HVCs, suggesting that galaxy formation is an ongoing process and that HVCs represent primordial clouds currently being accreted by the Milky Way. Similarly, Blitz et al. (1999) proposed a hypothesis that some HVCs may be primordial gas left over from the formation of the Local Group. This suggests that HVCs may play a crucial role in galaxy formation and evolution, a process that remains poorly understood.
+
+
+In recent decades, large-scale HI surveys have increasingly focused on a subclass of HVCs known as Compact High-Velocity Clouds (CHVCs), first mentioned in the study by (Braun \& Burton 1999). Subsequently, Braun \& Burton (2000) conducted a detailed analysis of this group of CHVCs, finding that they exhibit specific morphological features, with one or more compact cores embedded within a diffuse halo. By comparing column density and volume density, they derived a distance range for CHVCs between 0.5 and 1 Mpc. Comparisons with nearby galaxies revealed that the properties of CHVCs are very similar to those of nearby low-mass galaxies, such as irregular dwarf galaxies in the Local Group. Meanwhile, (Putman et al. 2002) et al. used HIPASS (HI Parkes All-Sky Survey) survey data to identify 179 CHVCs in the southern sky and compared them with (Braun \& Burton 1999)'s northern sky study, finding that the southern sky contains a greater number of CHVCs. Putman et al. (2002) conducted statistical analyses of the distribution, size, peak brightness temperature, and other properties of HVCs and CHVCs, identifying key distribution features such as power-law distributions of column density and flux. (Saul et al. 2012) used GALFA-HI survey data to identify 1,964 isolated, compact neutral hydrogen clouds, among which 629 HVCs belong to CHVCs.
+
+
+Based on cosmological simulation studies (Klypin et al. 1999, Moore et al. 1999), CHVCs may represent lost satellite galaxies of the Milky Way. Recent models conclude that most dark matter mini-halos are likely located near the Milky Way, with an average distance of approximately 120 kpc (Kravtsov et al. 2004). (Sternberg et al. 2002) simulated the physical state of HI gas in dark matter mini-halos and concluded that the observed parameters of CHVCs are consistent with those of ring galaxy material at a typical distance of 150 kpc.
+
+In this paper, we study the fundamental properties of MCs, following the catalog in Paper I. The observations and data reduction are described in Section 2. In Section 3, we present the interesting results, which include a statistical study of the observational properties of MCs, optical depth, and flux results. The results of the abundance and abundance ratio are presented in Sections 4 and 5, respectively. We will discuss some important issues in Section 6, and the conclusion is given in Section 7.
+
+\section{Observations and Data}
+
+CRAFTS (The Commensal Radio Astronomy FAST Survey) is a large-scale survey project using the Five-hundred-meter Aperture Spherical Telescope (FAST). The survey aims to detect and study various celestial objects, including FRBs, HI clouds, and other radio sources. The electronics gain was corrected using the new High Cadence CAL technique which allows commensal observations as part of the CRAFTS survey. CRAFTS is designed to cover a wide area of the sky with high sensitivity and resolution, making it one of the most ambitious radio astronomy projects in recent years. We use data from the CRAFTS HI Narrow All-sky (CHINA) survey, as a part of the CRAFTS has been oberving the Galactic 21cm emission of atomic Hydrogen (HI).
+
+The current release is still part of the as of yet unpublished Data Release 1 (DR1), includes approximately 20\% of the planned sky coverage.
+CHINA-DR1 covers $2000\,\mathrm{deg^2}$ of sky in an area between $\delta = -13^\circ$ and $\delta = 67^\circ$ (see Figure 1 and Figure 2). CHINA data provide a channel spacing of $0.2\,\mathrm{km/s}$ over a velocity range of $\pm 600\,\mathrm{km/s}$ in the local standard of rest (LSR) with a effective beam size (spatial resolution) of 4 arcmin. The sensitivity of CHINA-DR1 is non-uniform, $\sigma_{\mathrm{rms}}$ is about $0.17\,\mathrm{K}$ or better per $0.2\,\mathrm{km/s}$ channel.
+
+\section{Cataloging Method}
+
+\subsection{Pre-processing}
+
+\begin{enumerate}
+    \item \textit{Baseline correction.} Strong RFI due to an unshielded compressor still affects much of the data taken earlier in the survey. While we have removed nearly all such RFI from the cubes, the effect was quite strong and can still affect fluxes, as well as baselines. We use the arPLS algorithm to correct the baselines of spectra in the data cube. arPLS is an adaptive iteratively reweighted penalized least squares method, which can effectively fit the baseline of spectra with strong noise and background interference.
+    \item \textit{Data selection.} We select the data with value $x > s\sigma$, where $x$ is the value of a pixel, $\sigma$ is the standard deviation of the data, and $s$ is a threshold. The threshold $s$ is set by the knee point of curve $f(s) = N(> s\sigma)/N_\mathrm{total}$, using the \texttt{Kneedle} algorithm \citep{satopaa2011finding}. For the selected data here, the best value of $s$ is $s \approx 2$, which can be extended to other high-speed HI data of CRAFTS. In this case, the noise is significantly reduced, while most signal data is retained.
+\end{enumerate}
+
+\subsection{DBSCAN algorithm}
+
+In this study, we examine molecular clouds in general, and ignore their hierarchical details, i.e., molecular clouds are defined as consecutive structures in PPV space. Statistical results are based on properties of those independent PPV structures. With this definition, we use DBSCAN\footnote{\url{https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html}} to identify clusters as molecular clouds. Trunks of the dendrogram\footnote{\url{https://dendrograms.readthedocs.io/en/stable}} also satisfy these requirements, but if only trunks were concerned, the dendrogram would be a special case of DBSCAN. Consequently, we do not use the dendrogram, but explore DBSCAN parameters and demonstrate the variation of statistical results. Hierarchical Density-Based Spatial Clustering of Applications with Noise (HDBSCAN), an improved version of DBSCAN, is also able to identify clusters, but HDBSCAN does not provide a uniform molecular cloud definition in PPV space. Therefore, we did no use HDBSCAN.
+
+Two parameters of DBSCAN, $\epsilon$ and MinPts, define the connection property of voxels in PPV space. The number of points in an $\epsilon$ radius is assigned as the density, and a minimum density of MinPts is required to be considered as core points. Directly connected (within an $\epsilon$ radius) core points form clusters, and neighbors (within an $\epsilon$ radius) of those core points are also considered as their cluster members. Figure 3 shows three types of connectivity in PPV space, i.e., definitions of neighborhood. Connectivity 1 corresponds to $\epsilon$ = 1 in Euclidean distance (6 neighboring points at most), $\epsilon = \sqrt{2}$ (18 points) for connectivity 2 and $\epsilon = \sqrt{3}$ (26 points) for connectivity 3. We examined all three types of connectivity, and the choice of $\epsilon$ and MinPts is discussed in section 4.
+
+\subsection{Cloud Classification}
+
+Clusters identiﬁed by DBSCAN may contain noises, so we apply post-selection criteria on raw clusters in two steps:
+
+\begin{enumerate}
+    \item \textit{Classification by properties.} We classify clouds from noise by 3 properties: signal-to-noise ratio (SNR), spatial size on the globe (SIZE) and velocity dispersion (FWHM). In general, clouds with higher SNR, larger SIZE and larger FWHM are more likely to be real clouds. We set thresholds for these three properties to filter out noise. The threshold is defined as follows: for each combination of $\epsilon$ and MinPts, the threshold is gradually increased until the noise level is minimized, while all real clouds are included. In fact, the SNR threshold and the FWHM threshold of the velocity are sufficient to filter out real clouds, and the SIZE threshold has no effect in practice. A table of thresholds for different combinations of $\epsilon$ and MinPts is given in Section 4.
+    \item \textit{Classification by morphology and spectrum.} After the first step, some noise may still be included in the cloud catalog. We further classify clouds by their morphology and spectrum. False clouds generated by RFI usually look like stripes along the Right Ascension and have discontinuous or non-Gaussian spectra, while real clouds have a nearly round or clumpy shape and Gaussian peaks in spectra. To further confirm the spectral characteristics, we compared the spectrum obtained by CRAFTS with the spectrum obtained by the HI4PI survey in the same area. If both surveys identify the same Gaussian peak at the same position, it can be determined that it is a real signal. This step is done manually by visual inspection.
+\end{enumerate}
+
+\section{Results}
+
+\subsection{Parameter Selection}
+
+After testing various combinations of $\epsilon$ and MinPts, we find the following results listed in Table 1. The parameters of SNR and FWHM are the thresholds used to filter out noise, while $N$, $T$, and $F$ are the numbers of total clouds, true clouds, and false clouds, respectively. The total number of clouds $N$ is the sum of true clouds $T$ and false clouds $F$. In general, a larger $\epsilon$ or a smaller MinPts can find more true clouds, but also results in more false clouds. Therefore, we can choose a combination of parameters that minimizes the number of false clouds while retaining most true clouds. Based on this criterion, we select $\epsilon = \sqrt{3}$ and MinPts = 12 as our final parameters for DBSCAN. This combination yields 17 true clouds and only 4 false clouds, which is an acceptable trade-off between completeness and reliability.
+
+On the other hand, the fluctuation of the number of real clouds is not only related to whether fainter clouds can be found, but also to the fact that under different clustering strategies, some large clusters are split into small clusters, or multiple small clusters are merged into large clusters. In fact, over a wide range of combinations of epsilon and minPts, the clouds found are the same candidates, which proves the stability of our algorithm. The false clouds are also few and easy to identify.
+
+\begin{deluxetable}{ccccccc}
+    \tablecaption{Parameters}
+    \tablehead{\colhead{$\epsilon$} & \colhead{minPts} & \colhead{SNR} & \colhead{FWHM (km/s)}& \colhead{N} & \colhead{T} & \colhead{F}}
+    \startdata
+    $\sqrt{3}$ & 19 & 6.5 & 6   & 16 & 16 & 0 \\
+    $\sqrt{3}$ & 18 & 5   & 4   & 15 & 15 & 0 \\
+    $\sqrt{3}$ & 15 & 5   & 3.5 & 17 & 14 & 3 \\
+    $\sqrt{3}$ & 12 & 5   & 3.5 & 21 & 17 & 4 \\
+    $\sqrt{3}$ & 9  & 4.5 & 3.5 & 20 & 16 & 4 \\
+    $\sqrt{3}$ & 6  & 5   & 3.5 & 20 & 16 & 4 \\
+    \hline
+    $\sqrt{2}$ & 18 & 5   & 4   & 14 & 14 & 0 \\
+    $\sqrt{2}$ & 15 & 5   & 3.5 & 17 & 14 & 3 \\
+    $\sqrt{2}$ & 12 & 5   & 3.5 & 21 & 17 & 4 \\
+    $\sqrt{2}$ & 9  & 4.5 & 4   & 20 & 16 & 4 \\
+    $\sqrt{2}$ & 6  & 5   & 3.5 & 20 & 16 & 4 \\
+    \hline
+    1          & 6  & 5   & 3.5 & 19 & 15 & 4 \\
+    1          & 4  & 4.5 & 3.5 & 19 & 16 & 3 \\
+    1          & 2  & 5   & 3.5 & 19 & 16 & 3 \\
+    \enddata
+\tablecomments{sample comment}
+\end{deluxetable}
+
+\subsection{Cloud Properties}
+
+In Table 2 we present the HVC and IVC candidates. Column density values can be derived from the brightness temperature via:
+\[
+    N_{\mathrm{HI}} = 1.823 \times 10^{18} \int T_B dv \, \mathrm{cm^{-2}}
+\]
+The columns of the tables are as follows:
+\begin{enumerate}
+    \item \textit{ID}: The ID of the cloud. in the traditional form for HVCs, obtained from the galactic coordinates at the nominal cloud center and the $V_{\mathrm{LSR}}$ of the cloud
+    \item \textit{RA}: Right Ascension of the cloud peak in J2000.
+    \item \textit{Dec}: Declination of the cloud peak in J2000.
+    \item $v_{\mathrm{LSR}}$: The radial velocity of the cloud peak in the local standard of rest (LSR) frame.
+    \item $v_{\mathrm{GSR}}$: The full width at half maximum (FWHM) of the cloud's velocity profile in km/s.
+    \item \textit{SIZE}: The angular size of the cloud in arcmin.
+    \item $T_{\mathrm{peak}}$: The peak brightness temperature of the cloud in K.
+    \item $N_{\mathrm{HI}}$: The column density of the cloud in units of $10^{18}\,\mathrm{cm^{-2}}$, which are derived from the brightness temperature via:
+    \[
+        N_{\mathrm{HI}} = 1.823 \times 10^{18} \int T_B dv \, \mathrm{cm^{-2}}
+    \]
+    \item \textit{SNR}: The signal-to-noise ratio of the cloud.
+    \item \textit{Type}: The classification of the cloud as either HVC (High Velocity Cloud) or IVC (Intermediate Velocity Cloud).
+\end{enumerate}
+
+\begin{deluxetable*}{ccccccccccccc}
+\tablecaption{HI Cloud Parameters}
+\tablewidth{1\linewidth}
+\tablehead{
+    \colhead{ID} & \colhead{RA} & \colhead{Dec} & \colhead{GLON} & \colhead{GLAT} &
+    \colhead{$v_{\mathrm{LSR}}$} & \colhead{$v_{\mathrm{GSR}}$} & \colhead{SIZEa} & \colhead{SIZEb} &
+    \colhead{SNR} & \colhead{FWHM} & \colhead{TPKB} & \colhead{N\_HI} \\
+    ID & (h:m:s) & (d:m) & (deg) & (deg) & (km/s) & (km/s) & (arcmin) & (arcmin) &  & (km/s) & (K) & ($10^{18}\,\mathrm{cm^{-2}}$)
+}
+\startdata
+0  & 118.67 & -12.76 & 231.64 &  7.81 & 159.75 & -11.16 &  6.39  &  4.81 &  6.60 &  3.69 & 0.87 & 0.06 \\
+1  & 117.60 & -11.44 & 229.96 &  7.56 & 152.50 & -14.47 & 12.76  &  9.08 &  7.85 &  7.46 & 1.04 & 0.23 \\
+2  & 115.77 & -12.73 & 230.20 &  5.36 & 136.40 & -31.87 & 20.82  & 11.93 & 11.61 & 11.19 & 1.53 & 0.48 \\
+3  & 115.49 & -12.09 & 229.50 &  5.44 & 143.44 & -23.09 &  5.89  &  3.46 &  6.03 &  7.01 & 0.80 & 0.15 \\
+4  & 116.15 & -12.70 & 230.35 &  5.70 & 145.86 & -22.70 &  6.26  &  4.49 &  5.57 &  4.21 & 0.74 & 0.08 \\
+5  & 122.72 & -10.66 & 231.86 & 12.28 & 104.19 & -64.87 & 194.58 & 19.22 & 21.02 & 11.12 & 2.76 & 1.00 \\
+6  & 116.57 & -11.50 & 229.50 &  6.65 & 132.37 & -33.80 & 16.56  &  5.34 &  6.11 &  7.80 & 0.81 & 0.15 \\
+7  & 120.06 & -11.97 & 231.64 &  9.37 & 131.77 & -38.44 & 31.44  & 21.23 & 10.67 & 10.11 & 1.41 & 0.33 \\
+8  & 115.16 & -12.90 & 230.05 &  4.76 & 131.57 & -36.52 &  8.79  &  7.74 &  5.26 &  5.92 & 0.70 & 0.07 \\
+9  & 120.95 & -12.31 & 232.39 &  9.95 & 121.70 & -49.95 & 23.16  & 10.58 & 12.36 &  9.73 & 1.63 & 0.65 \\
+10 & 122.98 & -12.89 & 233.93 & 11.34 & 129.15 & -45.20 &  9.80  &  4.94 &  5.11 &  4.33 & 0.68 & 0.06 \\
+11 & 120.48 & -12.73 & 232.52 &  9.34 & 127.54 & -44.72 &  9.80  &  7.29 &  6.17 &  3.64 & 0.82 & 0.05 \\
+12 & 123.96 & -10.25 & 232.15 & 13.54 & 113.05 & -55.83 &  8.83  &  5.19 &  9.64 & 10.45 & 1.27 & 0.36 \\
+13 & 124.74 & -10.72 & 232.97 & 13.95 & 101.78 & -68.67 & 24.97  & 16.08 &  7.79 &  7.92 & 1.03 & 0.22 \\
+14 & 118.72 &  -7.67 & 227.20 & 10.38 & 100.37 & -58.40 & 21.03  &  9.57 &  5.36 &  6.21 & 0.70 & 0.16 \\
+15 & 120.63 & -11.73 & 231.71 &  9.98 & 100.37 & -69.70 & 13.28  &  6.76 &  6.66 &  3.91 & 0.77 & 0.13 \\
+16 & 124.89 &  -7.95 & 230.60 & 15.52 & 105.60 & -58.21 & 19.05  &  8.43 &  5.69 &  3.67 & 0.69 & 0.12 \\
+\enddata
+\tablecomments{Parameters of detected HI clouds.}
+\end{deluxetable*}
+
+\section{Discussion}
+
+\section{Summary}
+
+\bibliography{reference.bib}
+\bibliographystyle{aasjournalv7}
+
+\end{document}
