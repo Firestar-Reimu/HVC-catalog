@@ -10,12 +10,13 @@ Simplified processing script:
     velocities = cube.spectral_axis.value
 
 - For each spatial pixel (x,y) compute Galactic coordinates (l,b) using the cube WCS,
-  call calc_v_dev(l,b,...) to get v_max and v_min, zero the spectrum between v_min..v_max,
+  call calc_v_dev(l,b,...) to get v_max and v_min, zero the spectrum between v_min and v_max,
   then produce two output cubes:
-    * keep only velocities > global_min_vmax
-    * keep only velocities < global_max_vmin
+    * keep only velocities > global_vmax_global
+    * keep only velocities < global_vmin_global
 
 Usage example:
+    python process_and_mask_cube.py input.fits
     python process_and_mask_cube.py input.fits -o out_pos.fits out_neg.fits
 
 Notes:
@@ -29,227 +30,121 @@ import numpy as np
 from tqdm import tqdm
 import warnings
 from astropy.coordinates import SkyCoord
-
-# Use spectral_cube as requested
+import os
 from spectral_cube import SpectralCube as sc
 
 # try import the C extension (or fallback to python implementation if you have it)
 try:
-    #import rotation_curve_c as rcmod
-    #calc_v_dev = rcmod.calc_v_dev
-    from Galaxy_Rotation_Model import calc_v_dev_py as calc_v_dev
+    import rotation_model_c
+    calc_v_dev = rotation_model_c.calc_v_dev
 except Exception:
-    raise ImportError("rotation_curve_c module not found. Build and install the C extension or provide a Python calc_v_dev and modify the script.")
-
-def load_cube(path, hdu=0, memmap=True):
-    hdul = fits.open(path, memmap=memmap)
-    hduobj = hdul[hdu]
-    header = hduobj.header
-    data = hduobj.data
-    if data is not None:
-        data = np.asarray(data)
-    try:
-        wcs = WCS(header)
-        if getattr(wcs.wcs, "naxis", 0) == 0:
-            wcs = None
-    except Exception:
-        wcs = None
-    hdul.close()
-    return data, header, wcs
-
-def get_spectral_velocity_axis(fits_path, nchan, rest_freq=None):
-    """
-    Simplified: use spectral_cube to read the file and convert spectral axis to km/s.
-    Returns a numpy array of length nchan with velocities in km/s.
-
-    This intentionally implements only the single path you specified.
-    """
-    cube = sc.read(fits_path)
-    # Convert to km/s (spectral_cube will try to interpret the axis)
-    if rest_freq is not None:
-        rest_q = u.Quantity(rest_freq, u.Hz)
-        cube_kms = cube.with_spectral_unit(u.km / u.s, rest_value=rest_q)
-    else:
-        cube_kms = cube.with_spectral_unit(u.km / u.s)
-    vel_axis = cube_kms.spectral_axis.value
-    vel_axis = np.asarray(vel_axis, dtype=float)
-    # If lengths mismatch, warn but still return what spectral_cube provided
-    if len(vel_axis) != nchan:
-        warnings.warn(f"spectral_cube returned {len(vel_axis)} channels but expected {nchan}.")
-    return vel_axis
+    from rotation_model_py import calc_v_dev_py as calc_v_dev
+    print("Warning: using Python version of calc_v_dev, which may be slow.")
 
 def pix_to_galactic_l_b(celestial_wcs, xpix, ypix):
-    """
-    Given a 2D celestial_wcs and pixel indices (x,y) in numpy indexing
-    (i.e., x is column index, y is row index), return galactic (l,b) in degrees.
-    Uses FK5 for RA/Dec interpretation (per request).
-    """
-    if celestial_wcs is None:
-        return None, None
-    try:
-        lonlat = celestial_wcs.all_pix2world(float(xpix), float(ypix), 0)
-        ctypes = getattr(celestial_wcs.wcs, "ctype", [])
-        if ctypes:
-            c0 = ctypes[0].upper()
-            # If header gives RA/Dec, convert using FK5 (requested) to Galactic
-            if "RA" in c0 or "DEC" in c0 or ("GLON" not in c0 and "GLAT" not in c0):
-                ra = lonlat[0]
-                dec = lonlat[1]
-                sc = SkyCoord(ra=ra*u.deg, dec=dec*u.deg, frame='fk5')
-                gal = sc.galactic
-                return float(gal.l.deg), float(gal.b.deg)
-            else:
-                return float(lonlat[0]), float(lonlat[1])
-        else:
-            return float(lonlat[0]), float(lonlat[1])
-    except Exception:
-        return None, None
-
-def find_spectral_index(wcs):
-    ctypes = getattr(wcs.wcs, "ctype", [])
-    for i, ct in enumerate(ctypes):
-        up = ct.upper()
-        if any(sub in up for sub in ("FREQ", "VELO", "VRAD", "VOPT", "WAVE", "AWAV", "BETA")):
-            return i
-    return None
+    lonlat = celestial_wcs.all_pix2world(xpix, ypix, 0)
+    ctypes = celestial_wcs.wcs.ctype
+    c0 = ctypes[0].upper()
+    if "RA" in c0 or "DEC" in c0:
+        sc = SkyCoord(ra=lonlat[0]*u.deg, dec=lonlat[1]*u.deg, frame='fk5')
+        gal = sc.galactic
+        return gal.l.deg, gal.b.deg
+    else:
+        return lonlat[0], lonlat[1]
 
 def process_cube_mask_by_vdev(fits_in,
-                             fits_out_gt_minvmax,
-                             fits_out_lt_maxvmin,
-                             hdu=0,
-                             spec_axis=0,
+                             fits_out_pos_minvmax,
+                             fits_out_neg_maxvmin,
                              model='univ',
-                             v_dev=50.0,
-                             rest_freq=None,
-                             memmap=True):
-    """
-    Main processing function using simplified spectral axis extraction (spectral_cube).
-    """
-    if rest_freq is not None:
-        rest_freq = u.Quantity(rest_freq, u.Hz)
+                             v_dev=50.0):
 
-    data, header, wcs = load_cube(fits_in, hdu=hdu, memmap=memmap)
-    if data is None:
-        raise ValueError("Input FITS has no data.")
+    cube = sc.read(fits_in).with_spectral_unit(u.km / u.s)
 
-    # Move spectral axis to axis 0
-    if spec_axis != 0:
-        data = np.moveaxis(data, spec_axis, 0)
-    if data.ndim < 3:
-        raise ValueError("Data must be a cube with at least 3 axes (spec,y,x).")
+    data = cube.unmasked_data[:].value  # (v, y, x)
+    wcs = cube.wcs
+    ny, nx = data.shape[-2], data.shape[-1]
     nz = data.shape[0]
-    ny = data.shape[-2]
-    nx = data.shape[-1]
+    vel_axis = cube.spectral_axis.value
 
-    # get spectral velocity axis (1D array length nz) in km/s using spectral_cube
-    vel_axis = get_spectral_velocity_axis(fits_in, nz, rest_freq=rest_freq.to(u.Hz).value)
-    if vel_axis is None:
-        raise RuntimeError("Failed to determine velocity axis via spectral_cube.")
-
-    masked_cube = data.copy()
     vmax_map = np.full((ny, nx), np.nan, dtype=float)
     vmin_map = np.full((ny, nx), np.nan, dtype=float)
 
-    # Prepare celestial WCS for pixel->sky (spatial) if possible
-    celestial_wcs = None
-    if wcs is not None:
-        try:
-            celestial_wcs = wcs.celestial
-        except Exception:
-            celestial_wcs = None
+    pos_mask = np.zeros_like(data, dtype=bool)
+    neg_mask = np.zeros_like(data, dtype=bool)
 
-    total = nx * ny
-    pbar = tqdm(total=total, desc="Masking pixels")
+    pbar = tqdm(total=nx * ny, desc="Calc vdev & mask")
     for j in range(ny):  # y (row)
         for i in range(nx):  # x (col)
-            if celestial_wcs is not None:
-                l_deg, b_deg = pix_to_galactic_l_b(celestial_wcs, i, j)
-            else:
-                l_deg, b_deg = None, None
+            l_deg, b_deg = pix_to_galactic_l_b(wcs.celestial, i, j)
 
-            if l_deg is None or b_deg is None:
-                vmax_map[j, i] = np.nan
-                vmin_map[j, i] = np.nan
-            else:
-                # Attempt calling calc_v_dev using the Python-default signature (no n_sample):
-                # calc_v_dev(l, b, h=5, r_gal=20, r_sun=8.5, v_sun=220, model='univ', v_dev=50)
-                try:
-                    v_max, v_min = calc_v_dev(float(l_deg), float(b_deg),
-                                               h=5, r_gal=20, r_sun=8.5, v_sun=220,
-                                               model=model, v_dev=v_dev)
-                except Exception as e:
-                    warnings.warn(f"calc_v_dev raised at pixel ({i},{j}) l={l_deg},b={b_deg}: {e}")
-                    v_max, v_min = np.nan, np.nan
+            v_max, v_min = calc_v_dev(float(l_deg), float(b_deg),
+                                      h=5, r_gal=20, r_sun=8.5, v_sun=220,
+                                      model=model, v_dev=v_dev)
 
-                vmax_map[j, i] = float(v_max) if np.isfinite(v_max) else np.nan
-                vmin_map[j, i] = float(v_min) if np.isfinite(v_min) else np.nan
+            vmax_map[j, i] = v_max
+            vmin_map[j, i] = v_min
 
-                if np.isfinite(v_min) and np.isfinite(v_max):
-                    vlow = min(v_min, v_max)
-                    vhigh = max(v_min, v_max)
-                    mask = (vel_axis >= vlow) & (vel_axis <= vhigh)
-                    if mask.any():
-                        masked_cube[mask, j, i] = 0.0
+            # 正速度: 各像素只保留比v_max大的部分
+            pos_mask[:, j, i] = vel_axis > v_max
+            # 负速度: 各像素只保留比v_min小的部分
+            neg_mask[:, j, i] = vel_axis < v_min
             pbar.update(1)
     pbar.close()
 
-    if np.all(np.isnan(vmax_map)):
-        raise RuntimeError("All vmax values are NaN: cannot compute global thresholds.")
-    global_min_vmax = np.nanmin(vmax_map)
-    global_max_vmin = np.nanmax(vmin_map)
+    # 计算谱轴范围
+    # 正速度: np.min(vmax_map) < v <= np.max(v)
+    vmax_global = np.min(vmax_map)
+    max_v   = np.max(vel_axis)
 
-    cube_gt_minvmax = masked_cube.copy()
-    cube_lt_maxvmin = masked_cube.copy()
+    # 负速度: np.min(v) <= v < np.max(vmin_map)
+    min_v = np.min(vel_axis)
+    vmin_global = np.max(vmin_map)
 
-    mask_le = vel_axis <= global_min_vmax
-    if mask_le.any():
-        cube_gt_minvmax[mask_le, :, :] = 0.0
+    # 建立mask dask cube 以便保存（spectral_cube支持自带mask）
+    pos_cube = sc(data=np.where(pos_mask, data, 0)*cube.unit, wcs=cube.wcs)
+    neg_cube = sc(data=np.where(neg_mask, data, 0)*cube.unit, wcs=cube.wcs)
+    # 裁剪后再存
+    pos_cube_slab = pos_cube.spectral_slab(vmax_global * u.km/u.s, max_v * u.km/u.s)
+    neg_cube_slab = neg_cube.spectral_slab(min_v * u.km/u.s, vmin_global * u.km/u.s)
 
-    mask_ge = vel_axis >= global_max_vmin
-    if mask_ge.any():
-        cube_lt_maxvmin[mask_ge, :, :] = 0.0
-
-    out_header = header.copy()
-    if spec_axis != 0:
-        cube_to_write_gt = np.moveaxis(cube_gt_minvmax, 0, spec_axis)
-        cube_to_write_lt = np.moveaxis(cube_lt_maxvmin, 0, spec_axis)
-    else:
-        cube_to_write_gt = cube_gt_minvmax
-        cube_to_write_lt = cube_lt_maxvmin
-
-    fits.PrimaryHDU(data=cube_to_write_gt, header=out_header).writeto(fits_out_gt_minvmax, overwrite=True)
-    fits.PrimaryHDU(data=cube_to_write_lt, header=out_header).writeto(fits_out_lt_maxvmin, overwrite=True)
+    # 直接用 spectral_cube 提供的 write 方法保存，header自动正确
+    pos_cube_slab.write(fits_out_pos_minvmax, overwrite=True)
+    neg_cube_slab.write(fits_out_neg_maxvmin, overwrite=True)
 
     return {
-        "vmax_map": vmax_map,
-        "vmin_map": vmin_map,
-        "global_min_vmax": global_min_vmax,
-        "global_max_vmin": global_max_vmin,
-        "out_gt": fits_out_gt_minvmax,
-        "out_lt": fits_out_lt_maxvmin
+        "vmax_global": vmax_global,
+        "vmin_global": vmin_global,
+        "out_pos": fits_out_pos_minvmax,
+        "out_neg": fits_out_neg_maxvmin
     }
 
 if __name__ == "__main__":
     import argparse
-    p = argparse.ArgumentParser(description="Mask FITS cube spectra between v_min and v_max computed per-pixel from Galactic (l,b).")
+    p = argparse.ArgumentParser(description="Mask FITS cube spectra: keep only > v_max or < v_min for each pixel; trim to global (min(vmax_map), max(v)) and (min(v), max(vmin_map)).")
     p.add_argument("fits_in", help="Input FITS cube")
-    p.add_argument("-o", "--out", nargs=2, required=True, metavar=("OUT_POS","OUT_NEG"),
-                   help="Two output FITS files: first keeps velocities > min(v_max), second keeps velocities < max(v_min)")
-    p.add_argument("--hdu", type=int, default=0)
-    p.add_argument("--spec-axis", type=int, default=0, help="numpy axis index that is spectral (default 0 => data.shape=(spec,y,x))")
-    p.add_argument("--model", type=str, default="univ", choices=("simple","univ","linear","linear2","flat","power"))
-    p.add_argument("--vdev", type=float, default=50.0, help="dev passed into calc_v_dev (default 0)")
-    p.add_argument("--rest-freq", type=float, default=1.420405751770e9, help="rest frequency in Hz (optional, for freq->velocity conversion)")
+    p.add_argument("-o", "--out", nargs=2, default=None, metavar=("OUT_POS","OUT_NEG"),
+                   help="Two output FITS files: first keeps v>v_max, second keeps v<v_min. If not specified, defaults to <input>_+.fits and <input>_-.fits")
+    p.add_argument("--height", type=float, default=5.0, help="Height above the Galactic plane in kpc (default 5)")
+    p.add_argument("--r_gal", type=float, default=20.0, help="Maximum Galactocentric radius in kpc (default 20)")
+    p.add_argument("--r_sun", type=float, default=8.5, help="Solar Galactocentric radius in kpc (default 8.5), only used in model=simple")
+    p.add_argument("--v_sun", type=float, default=220.0, help="Solar orbital velocity in km/s (default 220), only used in model=simple")
+    p.add_argument("--r_cut", type=float, default=0.5, help="Cutoff radius for solid body rotation in kpc (default 0.5), only used in model=simple")
+    p.add_argument("--model", type=str, default="univ", choices=("simple","univ","linear","power"))
+    p.add_argument("--vdev", type=float, default=50.0, help="dev passed into calc_v_dev (default 50)")
     args = p.parse_args()
 
-    out_pos, out_neg = args.out
-    res = process_cube_mask_by_vdev(args.fits_in,
+    if args.out is None:
+        base_name = os.path.splitext(args.fits_in)[0]
+        out_pos = base_name + "_+.fits"
+        out_neg = base_name + "_-.fits"
+    else:
+        out_pos, out_neg = args.out
+
+    results = process_cube_mask_by_vdev(args.fits_in,
                                    out_pos,
                                    out_neg,
-                                   hdu=args.hdu,
-                                   spec_axis=args.spec_axis,
                                    model=args.model,
-                                   v_dev=args.vdev,
-                                   rest_freq=u.Quantity(args.rest_freq, u.Hz),
-                                   memmap=True)
-    print("Done. Results:", res)
+                                   v_dev=args.vdev)
+    print("Done. Results:")
+    for key, value in results.items():
+        print(f"{key}: {value}")

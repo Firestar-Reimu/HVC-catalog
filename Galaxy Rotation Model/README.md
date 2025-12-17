@@ -3,19 +3,19 @@ Rotation curve C extension module
 =================================
 
 Files:
-- rotation_curve.c   : C source for Python extension module "rotation_curve_c"
+- rotation_curve.c   : C source for Python extension module "rotation_model_c"
 - setup.py           : build script using setuptools
 - example_usage.py   : example of how to import and call calc_v_dev from Python
 
 Build:
     python setup.py build_ext --inplace
 
-This will generate a shared library like rotation_curve_c*.so (Linux/macOS) or rotation_curve_c*.pyd (Windows)
+This will generate a shared library like rotation_model_c*.so (Linux/macOS) or rotation_model_c*.pyd (Windows)
 in the current directory. Then you can import it:
 
 Usage example (see example_usage.py):
-    import rotation_curve_c
-    vmax, vmin = rotation_curve_c.calc_v_dev(230, 10, model='univ')
+    import rotation_model_c
+    vmax, vmin = rotation_model_c.calc_v_dev(230, 10, model='univ')
     print(vmax, vmin)
 
 The function signature available from Python:

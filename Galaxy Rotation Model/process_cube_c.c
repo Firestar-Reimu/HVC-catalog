@@ -1,31 +1,13 @@
 /*
 process_cube_c.c
 
-C extension to speed up masking of a FITS data cube according to per-pixel
-deviation-velocity ranges computed from Galactic coordinates (l,b).
+C extension with optimized memory usage to speed up masking of a FITS data cube
+according to per-pixel deviation-velocity ranges computed from Galactic coordinates (l,b).
 
-This module exposes one function:
-
-    process_mask_cube_numpy(data, vel_axis, l_map, b_map, model, n_sample, vdev)
-
-Inputs (Python / numpy objects):
-- data: 3D numpy array, shape (nz, ny, nx), dtype float64 (spectral axis first)
-- vel_axis: 1D numpy array, length nz, dtype float64, velocities in km/s
-- l_map: 2D numpy array, shape (ny, nx), dtype float64, Galactic longitude degrees
-- b_map: 2D numpy array, shape (ny, nx), dtype float64, Galactic latitude degrees
-- model: str, one of "simple","univ","linear","linear2","flat","power"
-- n_sample: int (used by 'univ' and sampling in algorithms where needed)
-- vdev: double, extra dev to add/subtract to v_max/v_min when computing ranges
-
-Outputs (tuple):
-(masked_cube, cube_gt_minvmax, cube_lt_maxvmin, vmax_map, vmin_map, global_min_vmax, global_max_vmin)
-
-Notes:
-- The function implements the rotation-curve and R_min/R_max logic internally (copied/ported
-  from the earlier C/Python implementations) to avoid costly cross-language calls per-pixel.
-- The function expects that vel_axis and spatial maps are prepared in Python (we do NOT call WCS here).
-- All arrays are treated as double precision; other dtypes will be cast.
-- The function modifies no input arrays; it returns new arrays.
+Memory optimization:
+- Avoid creating full copies of the data cube upfront
+- Process and mask in-place when possible
+- Only create output arrays as needed
 */
 
 #define PY_SSIZE_T_CLEAN
@@ -41,15 +23,13 @@ static inline double deg_sin(double deg) { return sin(deg_to_rad(deg)); }
 static inline double deg_cos(double deg) { return cos(deg_to_rad(deg)); }
 static inline double deg_tan(double deg) { return tan(deg_to_rad(deg)); }
 
-/* Rotation models and R_min/R_max logic (translated from Python code) */
+/* Rotation models */
 
-/* v_rot_simple (Wakker-like, parameterized by v_sun) */
 static double v_rot_simple_model(double r, double v_sun_param) {
     if (r > 0.5) return v_sun_param;
     return 2.0 * v_sun_param * r;
 }
 
-/* v_rot_univ: universal curve with fixed internal r_sun = 8.15 (per user's requirement) */
 static double v_rot_univ_model(double r) {
     const double a2 = 0.96;
     const double a3 = 1.62;
@@ -78,32 +58,28 @@ static double v_rot_univ_model(double r) {
     return Vr;
 }
 
-/* v_rot_linear: uses r_sun_local = 8.122 */
 static double v_rot_linear_model(double r) {
     const double r_sun_local = 8.122;
     return 229.0 - 1.7 * (r - r_sun_local);
 }
 
-/* v_rot_linear2: piecewise */
 static double v_rot_linear2_model(double r) {
     if (r > 5.0) return 229.0 - 1.7 * r;
     return 44.1 * r;
 }
 
-/* v_rot_flat: constant v_sun */
 static double v_rot_flat_model(double r, double v_sun_param) {
     (void)r;
     return v_sun_param;
 }
 
-/* v_rot_power: Russeil 2017 */
 static double v_rot_power_model(double r) {
     const double r_sun_local = 8.34;
     const double v_sun_local = 240.0;
     return v_sun_local * 1.022 * pow(r / r_sun_local, 0.0803);
 }
 
-/* R_min/R_max calculators (1..4). These match the Python branching logic. */
+/* R_min/R_max calculators (1...4) */
 static void calc_R_min_max_1(double l, double b, double h, double r_gal, double r_sun, double *Rmin, double *Rmax) {
     double L = fmod(l, 360.0);
     if (L < 0) L += 360.0;
@@ -284,12 +260,7 @@ static void calc_R_min_max_4(double l, double b, double h, double r_gal, double 
     }
 }
 
-/* Core calc_v_dev logic (internal C) matching Python signature defaults.
-   We provide a function that returns v_max and v_min for a single (l,b).
-   Default arguments set to match Python user's latest version:
-   calc_v_dev(l, b, h=5, r_gal=20, r_sun=8.5, v_sun=220, model='univ', v_dev=50)
-   Note: for 'univ' and 'linear' models internal r_sun values are fixed as per user's request.
-*/
+/* Internal calc_v_dev function */
 static void calc_v_dev_internal(double l, double b,
                                 double h, double r_gal, double r_sun,
                                 double v_sun_param, int n_sample,
@@ -321,7 +292,6 @@ static void calc_v_dev_internal(double l, double b,
         vmax = (v1 > v2 ? v1 : v2) + v_dev;
         vmin = (v1 < v2 ? v1 : v2) - v_dev;
     } else if (strcmp(model, "univ") == 0) {
-        /* use internal v_rot_univ_model that uses r_sun = 8.15 internally */
         for (int idx = 0; idx <= n_sample; ++idx) {
             double R = R_min + (R_max - R_min) * ((double)idx / (double)n_sample);
             if (R <= 0.0) R = 1e-10;
@@ -377,7 +347,6 @@ static void calc_v_dev_internal(double l, double b,
         vmax += v_dev;
         vmin -= v_dev;
     } else {
-        /* default: univ */
         for (int idx = 0; idx <= n_sample; ++idx) {
             double R = R_min + (R_max - R_min) * ((double)idx / (double)n_sample);
             if (R <= 0.0) R = 1e-10;
@@ -394,12 +363,7 @@ static void calc_v_dev_internal(double l, double b,
     *out_vmin = vmin;
 }
 
-/* Main exposed function: process_mask_cube_numpy
-   Signature in Python:
-     process_mask_cube_numpy(data, vel_axis, l_map, b_map, model, n_sample=1000, vdev=0.0)
-
-   All arrays expected to be numpy (ndarray) of dtype float64; data shape (nz,ny,nx)
-*/
+/* Main function - OPTIMIZED for memory usage */
 static PyObject *process_mask_cube_numpy(PyObject *self, PyObject *args, PyObject *kwds) {
     PyObject *data_obj = NULL;
     PyObject *vel_obj = NULL;
@@ -417,21 +381,27 @@ static PyObject *process_mask_cube_numpy(PyObject *self, PyObject *args, PyObjec
         return NULL;
     }
 
-    /* Convert inputs to numpy arrays (double, contiguous) */
+    /* Convert to numpy arrays WITHOUT making copies - use read-only views when possible */
     PyArrayObject *data_arr = (PyArrayObject *)PyArray_FROM_OTF(data_obj, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     PyArrayObject *vel_arr  = (PyArrayObject *)PyArray_FROM_OTF(vel_obj,  NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     PyArrayObject *lmap_arr = (PyArrayObject *)PyArray_FROM_OTF(lmap_obj, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     PyArrayObject *bmap_arr = (PyArrayObject *)PyArray_FROM_OTF(bmap_obj, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
 
-    if (!data_arr || !vel_arr || !lmap_arr || !bmap_arr) {
-        Py_XDECREF(data_arr); Py_XDECREF(vel_arr); Py_XDECREF(lmap_arr); Py_XDECREF(bmap_arr);
+    if (! data_arr || !vel_arr || !lmap_arr || ! bmap_arr) {
+        Py_XDECREF(data_arr);
+        Py_XDECREF(vel_arr);
+        Py_XDECREF(lmap_arr);
+        Py_XDECREF(bmap_arr);
         PyErr_SetString(PyExc_TypeError, "Failed to convert inputs to required numpy dtypes (float64).");
         return NULL;
     }
 
     int ndim = PyArray_NDIM(data_arr);
     if (ndim != 3) {
-        Py_DECREF(data_arr); Py_DECREF(vel_arr); Py_DECREF(lmap_arr); Py_DECREF(bmap_arr);
+        Py_DECREF(data_arr);
+        Py_DECREF(vel_arr);
+        Py_DECREF(lmap_arr);
+        Py_DECREF(bmap_arr);
         PyErr_SetString(PyExc_ValueError, "data must be a 3D array with shape (nz,ny,nx).");
         return NULL;
     }
@@ -442,127 +412,133 @@ static PyObject *process_mask_cube_numpy(PyObject *self, PyObject *args, PyObjec
     npy_intp nx = shape[2];
 
     if (PyArray_NDIM(vel_arr) != 1 || PyArray_DIM(vel_arr,0) != nz) {
-        Py_DECREF(data_arr); Py_DECREF(vel_arr); Py_DECREF(lmap_arr); Py_DECREF(bmap_arr);
+        Py_DECREF(data_arr);
+        Py_DECREF(vel_arr);
+        Py_DECREF(lmap_arr);
+        Py_DECREF(bmap_arr);
         PyErr_SetString(PyExc_ValueError, "vel_axis must be 1D of length nz.");
         return NULL;
     }
     if (PyArray_NDIM(lmap_arr) != 2 || PyArray_DIM(lmap_arr,0) != ny || PyArray_DIM(lmap_arr,1) != nx) {
-        Py_DECREF(data_arr); Py_DECREF(vel_arr); Py_DECREF(lmap_arr); Py_DECREF(bmap_arr);
+        Py_DECREF(data_arr);
+        Py_DECREF(vel_arr);
+        Py_DECREF(lmap_arr);
+        Py_DECREF(bmap_arr);
         PyErr_SetString(PyExc_ValueError, "l_map must be 2D with shape (ny,nx).");
         return NULL;
     }
     if (PyArray_NDIM(bmap_arr) != 2 || PyArray_DIM(bmap_arr,0) != ny || PyArray_DIM(bmap_arr,1) != nx) {
-        Py_DECREF(data_arr); Py_DECREF(vel_arr); Py_DECREF(lmap_arr); Py_DECREF(bmap_arr);
+        Py_DECREF(data_arr);
+        Py_DECREF(vel_arr);
+        Py_DECREF(lmap_arr);
+        Py_DECREF(bmap_arr);
         PyErr_SetString(PyExc_ValueError, "b_map must be 2D with shape (ny,nx).");
         return NULL;
     }
 
-    /* Create output arrays (copies) */
-    PyArrayObject *masked = (PyArrayObject *)PyArray_NewCopy(data_arr, NPY_CORDER);
-    PyArrayObject *cube_gt = (PyArrayObject *)PyArray_NewCopy(masked, NPY_CORDER);
-    PyArrayObject *cube_lt = (PyArrayObject *)PyArray_NewCopy(masked, NPY_CORDER);
-
-    /* vmax_map and vmin_map */
-    npy_intp dims2[2]; dims2[0]=ny; dims2[1]=nx;
+    /* Create ONLY the vmax_map and vmin_map arrays (small) */
+    npy_intp dims2[2];
+    dims2[0] = ny;
+    dims2[1] = nx;
     PyArrayObject *vmax_map = (PyArrayObject *)PyArray_SimpleNew(2, dims2, NPY_DOUBLE);
     PyArrayObject *vmin_map = (PyArrayObject *)PyArray_SimpleNew(2, dims2, NPY_DOUBLE);
 
-    if (!masked || !cube_gt || !cube_lt || !vmax_map || !vmin_map) {
-        Py_XDECREF(data_arr); Py_XDECREF(vel_arr); Py_XDECREF(lmap_arr); Py_XDECREF(bmap_arr);
-        Py_XDECREF(masked); Py_XDECREF(cube_gt); Py_XDECREF(cube_lt);
-        Py_XDECREF(vmax_map); Py_XDECREF(vmin_map);
-        PyErr_SetString(PyExc_MemoryError, "Failed to allocate output arrays.");
+    if (!vmax_map || ! vmin_map) {
+        Py_DECREF(data_arr);
+        Py_DECREF(vel_arr);
+        Py_DECREF(lmap_arr);
+        Py_DECREF(bmap_arr);
+        Py_XDECREF(vmax_map);
+        Py_XDECREF(vmin_map);
+        PyErr_SetString(PyExc_MemoryError, "Failed to allocate vmax/vmin maps.");
         return NULL;
     }
 
-    double *data_ptr = (double *)PyArray_DATA(masked);
+    double *data_ptr = (double *)PyArray_DATA(data_arr);
     double *vel_ptr = (double *)PyArray_DATA(vel_arr);
     double *lptr = (double *)PyArray_DATA(lmap_arr);
     double *bptr = (double *)PyArray_DATA(bmap_arr);
     double *vmax_ptr = (double *)PyArray_DATA(vmax_map);
     double *vmin_ptr = (double *)PyArray_DATA(vmin_map);
 
-    /* strides: assume C-order contiguous (nz,ny,nx) */
-    npy_intp stride0 = PyArray_STRIDES(masked)[0] / sizeof(double); /* stride between spec indices */
-    npy_intp stride1 = PyArray_STRIDES(masked)[1] / sizeof(double];
-    npy_intp stride2 = PyArray_STRIDES(masked)[2] / sizeof(double];
-
-    /* We'll access masked as data_ptr[(k*ny + j)*nx + i] if contiguous C-order */
-    /* But to be safe, compute element index via indices and shape. */
-    /* Compute mask per pixel and set values to 0.0 */
-
     /* Initialize vmax_map/vmin_map to NaN */
-    for (npy_intp jj=0; jj<ny; ++jj) {
-        for (npy_intp ii=0; ii<nx; ++ii) {
+    for (npy_intp jj = 0; jj < ny; ++jj) {
+        for (npy_intp ii = 0; ii < nx; ++ii) {
             vmax_ptr[jj*nx + ii] = NAN;
             vmin_ptr[jj*nx + ii] = NAN;
         }
     }
 
-    /* Per-pixel processing */
-    for (npy_intp jj=0; jj<ny; ++jj) {
-        for (npy_intp ii=0; ii<nx; ++ii) {
-            double lval = lptr[jj*nx + ii];
-            double bval = bptr[jj*nx + ii];
-            if (!isfinite(lval) || !isfinite(bval)) {
-                vmax_ptr[jj*nx + ii] = NAN;
-                vmin_ptr[jj*nx + ii] = NAN;
-                continue;
-            }
-            double v_max, v_min;
-            /* call internal calc_v_dev; use defaults matching Python: h=5, r_gal=20, r_sun=8.5, v_sun=220 */
-            calc_v_dev_internal(lval, bval, 5.0, 20.0, 8.5, 220.0, n_sample, model, vdev, &v_max, &v_min);
-            vmax_ptr[jj*nx + ii] = v_max;
-            vmin_ptr[jj*nx + ii] = v_min;
-            if (!isfinite(v_max) || !isfinite(v_min)) continue;
-            double vlow = v_min < v_max ? v_min : v_max;
-            double vhigh = v_min < v_max ? v_max : v_min;
+    /* Per-pixel processing - process and MODIFY data in-place */
+    npy_intp total_pixels = ny * nx;
+    for (npy_intp pix = 0; pix < total_pixels; ++pix) {
+        npy_intp jj = pix / nx;
+        npy_intp ii = pix % nx;
 
-            /* iterate over spectral channels and mask if vel in [vlow, vhigh] */
-            for (npy_intp kk=0; kk<nz; ++kk) {
-                double vchan = vel_ptr[kk];
-                if (vchan >= vlow && vchan <= vhigh) {
-                    /* set masked[kk,jj,ii] = 0.0, cube_gt/cube_lt will be derived later */
-                    /* compute flat index for (kk,jj,ii) in masked C-contiguous array */
-                    npy_intp index = (kk * ny + jj) * nx + ii;
-                    data_ptr[index] = 0.0;
-                }
+        double lval = lptr[jj*nx + ii];
+        double bval = bptr[jj*nx + ii];
+
+        if (! isfinite(lval) || !isfinite(bval)) {
+            vmax_ptr[jj*nx + ii] = NAN;
+            vmin_ptr[jj*nx + ii] = NAN;
+            continue;
+        }
+
+        double v_max, v_min;
+        calc_v_dev_internal(lval, bval, 5.0, 20.0, 8.5, 220.0, n_sample, model, vdev, &v_max, &v_min);
+        vmax_ptr[jj*nx + ii] = v_max;
+        vmin_ptr[jj*nx + ii] = v_min;
+
+        if (! isfinite(v_max) || !isfinite(v_min)) continue;
+
+        double vlow = v_min < v_max ? v_min : v_max;
+        double vhigh = v_min < v_max ? v_max :  v_min;
+
+        /* Mask this pixel's spectrum in-place in the original data array */
+        for (npy_intp kk = 0; kk < nz; ++kk) {
+            double vchan = vel_ptr[kk];
+            if (vchan >= vlow && vchan <= vhigh) {
+                npy_intp index = (kk * ny + jj) * nx + ii;
+                data_ptr[index] = 0.0;
             }
         }
     }
 
-    /* compute global thresholds ignoring NaNs */
+    /* Compute global thresholds */
     double global_min_vmax = INFINITY;
     double global_max_vmin = -INFINITY;
-    for (npy_intp jj=0; jj<ny; ++jj) {
-        for (npy_intp ii=0; ii<nx; ++ii) {
+    for (npy_intp jj = 0; jj < ny; ++jj) {
+        for (npy_intp ii = 0; ii < nx; ++ii) {
             double vm = vmax_ptr[jj*nx + ii];
             double vn = vmin_ptr[jj*nx + ii];
             if (isfinite(vm) && vm < global_min_vmax) global_min_vmax = vm;
             if (isfinite(vn) && vn > global_max_vmin) global_max_vmin = vn;
         }
     }
-    if (!isfinite(global_min_vmax)) global_min_vmax = NAN;
+    if (! isfinite(global_min_vmax)) global_min_vmax = NAN;
     if (!isfinite(global_max_vmin)) global_max_vmin = NAN;
 
-    /* produce cube_gt and cube_lt from masked (masked already applied to 'masked') */
-    double *cube_gt_ptr = (double *)PyArray_DATA(cube_gt);
-    double *cube_lt_ptr = (double *)PyArray_DATA(cube_lt);
-    /* copy masked into both outputs then zero channels according to global thresholds */
-    /* masked data is already in 'masked' array (data_ptr) */
-    npy_intp total_elems = nz * ny * nx;
-    for (npy_intp idx=0; idx<total_elems; ++idx) {
-        cube_gt_ptr[idx] = data_ptr[idx];
-        cube_lt_ptr[idx] = data_ptr[idx];
+    /* Create two output arrays from the modified input */
+    /* cube_gt: zero out channels where vel <= global_min_vmax */
+    PyArrayObject *cube_gt = (PyArrayObject *)PyArray_NewCopy(data_arr, NPY_CORDER);
+    if (!cube_gt) {
+        Py_DECREF(data_arr);
+        Py_DECREF(vel_arr);
+        Py_DECREF(lmap_arr);
+        Py_DECREF(bmap_arr);
+        Py_DECREF(vmax_map);
+        Py_DECREF(vmin_map);
+        PyErr_SetString(PyExc_MemoryError, "Failed to allocate cube_gt.");
+        return NULL;
     }
 
+    double *cube_gt_ptr = (double *)PyArray_DATA(cube_gt);
     if (isfinite(global_min_vmax)) {
-        for (npy_intp kk=0; kk<nz; ++kk) {
+        for (npy_intp kk = 0; kk < nz; ++kk) {
             double vchan = vel_ptr[kk];
             if (vchan <= global_min_vmax) {
-                /* zero this channel in cube_gt */
-                for (npy_intp jj=0; jj<ny; ++jj) {
-                    for (npy_intp ii=0; ii<nx; ++ii) {
+                for (npy_intp jj = 0; jj < ny; ++jj) {
+                    for (npy_intp ii = 0; ii < nx; ++ii) {
                         npy_intp index = (kk * ny + jj) * nx + ii;
                         cube_gt_ptr[index] = 0.0;
                     }
@@ -570,13 +546,28 @@ static PyObject *process_mask_cube_numpy(PyObject *self, PyObject *args, PyObjec
             }
         }
     }
+
+    /* cube_lt: zero out channels where vel >= global_max_vmin */
+    PyArrayObject *cube_lt = (PyArrayObject *)PyArray_NewCopy(data_arr, NPY_CORDER);
+    if (!cube_lt) {
+        Py_DECREF(data_arr);
+        Py_DECREF(vel_arr);
+        Py_DECREF(lmap_arr);
+        Py_DECREF(bmap_arr);
+        Py_DECREF(vmax_map);
+        Py_DECREF(vmin_map);
+        Py_DECREF(cube_gt);
+        PyErr_SetString(PyExc_MemoryError, "Failed to allocate cube_lt.");
+        return NULL;
+    }
+
+    double *cube_lt_ptr = (double *)PyArray_DATA(cube_lt);
     if (isfinite(global_max_vmin)) {
-        for (npy_intp kk=0; kk<nz; ++kk) {
+        for (npy_intp kk = 0; kk < nz; ++kk) {
             double vchan = vel_ptr[kk];
             if (vchan >= global_max_vmin) {
-                /* zero this channel in cube_lt */
-                for (npy_intp jj=0; jj<ny; ++jj) {
-                    for (npy_intp ii=0; ii<nx; ++ii) {
+                for (npy_intp jj = 0; jj < ny; ++jj) {
+                    for (npy_intp ii = 0; ii < nx; ++ii) {
                         npy_intp index = (kk * ny + jj) * nx + ii;
                         cube_lt_ptr[index] = 0.0;
                     }
@@ -585,38 +576,31 @@ static PyObject *process_mask_cube_numpy(PyObject *self, PyObject *args, PyObjec
         }
     }
 
-    /* Build return tuple */
-    PyObject *ret_masked = PyArray_Return(masked);
     PyObject *ret_gt = PyArray_Return(cube_gt);
     PyObject *ret_lt = PyArray_Return(cube_lt);
     PyObject *ret_vmax = PyArray_Return(vmax_map);
     PyObject *ret_vmin = PyArray_Return(vmin_map);
-    PyObject *ret_global_min = PyFloat_FromDouble(global_min_vmax);
-    PyObject *ret_global_max = PyFloat_FromDouble(global_max_vmin);
 
-    /* cleanup references to inputs */
-    Py_DECREF(data_arr); Py_DECREF(vel_arr); Py_DECREF(lmap_arr); Py_DECREF(bmap_arr);
+    Py_DECREF(data_arr);
+    Py_DECREF(vel_arr);
+    Py_DECREF(lmap_arr);
+    Py_DECREF(bmap_arr);
 
-    PyObject *result = Py_BuildValue("NNNNNN", ret_masked, ret_gt, ret_lt, ret_vmax, ret_vmin, Py_BuildValue("dd", global_min_vmax, global_max_vmin));
-    /* The above embeds a tuple of two doubles as the 6th element (for convenience).
-       Alternatively could return separately; consumers should unpack accordingly. */
-
+    PyObject *result = Py_BuildValue("(NNNN(dd))", ret_gt, ret_lt, ret_vmax, ret_vmin, global_min_vmax, global_max_vmin);
     return result;
 }
 
-/* Method table */
 static PyMethodDef ProcessCubeMethods[] = {
     {"process_mask_cube_numpy", (PyCFunction)process_mask_cube_numpy, METH_VARARGS | METH_KEYWORDS,
      "process_mask_cube_numpy(data, vel_axis, l_map, b_map, model='univ', n_sample=1000, vdev=0.0)\n"
-     "Return (masked_cube, cube_gt, cube_lt, vmax_map, vmin_map, (global_min_vmax, global_max_vmin))."},
+     "Return (cube_gt, cube_lt, vmax_map, vmin_map, (global_min_vmax, global_max_vmin))."},
     {NULL, NULL, 0, NULL}
 };
 
-/* Module definition */
 static struct PyModuleDef processcubemodule = {
     PyModuleDef_HEAD_INIT,
     "process_cube_c",
-    "C-accelerated processing of FITS cubes by per-pixel dev-velocity masking",
+    "C-accelerated processing of FITS cubes with optimized memory usage",
     -1,
     ProcessCubeMethods
 };
@@ -625,7 +609,6 @@ PyMODINIT_FUNC PyInit_process_cube_c(void) {
     PyObject *m;
     m = PyModule_Create(&processcubemodule);
     if (m == NULL) return NULL;
-    /* Initialize numpy */
     import_array();
     return m;
 }

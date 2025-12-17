@@ -373,9 +373,9 @@ static void calc_R_min_max_4(double l, double b, double h, double r_gal, double 
 # V_rot = 220 km/s where R > 0.5 kpc, else V_rot = 440 * R
 # Wakker 1991: 1991A&A...250..499W
 */
-static double v_rot_simple(double r, double v_sun_param) {
-    if (r > 0.5) return v_sun_param;
-    return 2.0 * v_sun_param * r;
+static double v_rot_simple(double r, double v_sun_param, double r_cut_param) {
+    if (r > r_cut_param) return v_sun_param;
+    return (1.0 / r_cut_param) * v_sun_param * r;
 }
 
 /* ------------------------------------------------------------------
@@ -435,8 +435,8 @@ static double v_rot_power(double r) {
 /* ------------------------------------------------------------------
    calc_v_max_min_simple: mirrors Python calc_v_max_min_simple
 */
-static void calc_v_max_min_simple(double l, double b, double h, double r_gal, double r_sun_param, double v_sun_param, double *vmax, double *vmin) {
-    double v_sun_local = v_rot_simple(r_sun_param, v_sun_param);
+static void calc_v_max_min_simple(double l, double b, double h, double r_gal, double r_sun_param, double v_sun_param, double r_cut_param, double *vmax, double *vmin) {
+    double v_sun_local = v_rot_simple(r_sun_param, v_sun_param, r_cut_param);
     double Rmin = 0.0, Rmax = 0.0;
     if (r_sun_param < r_gal && r_gal < 2.0 * r_sun_param) {
         calc_R_min_max_1(l,b,h,r_gal,r_sun_param,&Rmin,&Rmax);
@@ -449,8 +449,8 @@ static void calc_v_max_min_simple(double l, double b, double h, double r_gal, do
     }
     double s_l = deg_sin(l);
     double c_b = deg_cos(b);
-    double vRmin = (v_rot_simple(Rmin, v_sun_param) * r_sun_param / Rmin - v_sun_local) * s_l * c_b;
-    double vRmax = (v_rot_simple(Rmax, v_sun_param) * r_sun_param / Rmax - v_sun_local) * s_l * c_b;
+    double vRmin = (v_rot_simple(Rmin, v_sun_param, r_cut_param) * r_sun_param / Rmin - v_sun_local) * s_l * c_b;
+    double vRmax = (v_rot_simple(Rmax, v_sun_param, r_cut_param) * r_sun_param / Rmax - v_sun_local) * s_l * c_b;
     *vmax = (vRmin > vRmax) ? vRmin : vRmax;
     *vmin = (vRmin < vRmax) ? vRmin : vRmax;
 }
@@ -541,6 +541,7 @@ static PyObject* py_calc_v_dev(PyObject *self, PyObject *args, PyObject *kwds) {
     double r_gal = 20.0;
     double r_sun = 8.5;
     double v_sun_param = 220.0;
+    double r_cut_param = 0.5;
     PyObject *model_obj = NULL;
     double v_dev = 50.0;
 
@@ -562,7 +563,7 @@ static PyObject* py_calc_v_dev(PyObject *self, PyObject *args, PyObject *kwds) {
 
     double v_max = 0.0, v_min = 0.0;
     if (strcmp(model, "simple") == 0) {
-        calc_v_max_min_simple(l, b, h, r_gal, r_sun, v_sun_param, &v_max, &v_min);
+        calc_v_max_min_simple(l, b, h, r_gal, r_sun, v_sun_param, r_cut_param, &v_max, &v_min);
     } else if (strcmp(model, "univ") == 0) {
         calc_v_max_min_univ(l, b, h, r_gal, &v_max, &v_min);
     } else if (strcmp(model, "linear") == 0) {
@@ -588,14 +589,14 @@ static PyMethodDef RotationCurveMethods[] = {
 };
 
 /* Module definition */
-static struct PyModuleDef rotationcurvemodule = {
+static struct PyModuleDef rotationmodelmodule = {
     PyModuleDef_HEAD_INIT,
-    "rotation_curve_c",
+    "rotation_model_c",
     "C implementation of calc_v_dev translated from Galaxy_Rotation_Model.py",
     -1,
     RotationCurveMethods
 };
 
-PyMODINIT_FUNC PyInit_rotation_curve_c(void) {
-    return PyModule_Create(&rotationcurvemodule);
+PyMODINIT_FUNC PyInit_rotation_model_c(void) {
+    return PyModule_Create(&rotationmodelmodule);
 }

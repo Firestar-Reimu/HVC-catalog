@@ -310,8 +310,8 @@ def calc_R_min_max_4(l, b, h, r_gal, r_sun):
 # Simple rotation curve model
 # V_rot = 220 km/s where R > 0.5 kpc, else V_rot = 440 * R
 # Wakker 1991: 1991A&A...250..499W
-def v_rot_simple(r, v_sun=220):
-    v_rot = np.where(r > 0.5, v_sun, 2 * v_sun * r)
+def v_rot_simple(r, v_sun=220, r_cut=0.5):
+    v_rot = np.where(r > r_cut, v_sun, (1 / r_cut) * v_sun * r)
     return v_rot
 
 # %%
