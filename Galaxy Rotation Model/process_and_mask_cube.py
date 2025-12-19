@@ -32,6 +32,9 @@ import warnings
 from astropy.coordinates import SkyCoord
 import os
 from spectral_cube import SpectralCube as sc
+from joblib import Parallel, delayed
+from threading import Lock
+import time
 
 # try import the C extension (or fallback to python implementation if you have it)
 try:
@@ -58,10 +61,12 @@ def process_cube_mask_by_vdev(fits_in,
                              model='univ',
                              v_dev=50.0):
 
+    t0 = time.time()
     cube = sc.read(fits_in).with_spectral_unit(u.km / u.s)
 
     data = cube.unmasked_data[:].value  # (v, y, x)
     wcs = cube.wcs
+    celestial_wcs = wcs.celestial  # reuse reference in workers
     ny, nx = data.shape[-2], data.shape[-1]
     nz = data.shape[0]
     vel_axis = cube.spectral_axis.value
@@ -69,27 +74,45 @@ def process_cube_mask_by_vdev(fits_in,
     vmax_map = np.full((ny, nx), np.nan, dtype=float)
     vmin_map = np.full((ny, nx), np.nan, dtype=float)
 
-    pos_mask = np.zeros_like(data, dtype=bool)
-    neg_mask = np.zeros_like(data, dtype=bool)
+    t1 = time.time()
+    print(f"Loaded cube {fits_in}: shape={data.shape}, took {t1 - t0:.4f} s")
 
+    # Prepare thread-safe progress bar
     pbar = tqdm(total=nx * ny, desc="Calc vdev & mask")
-    for j in range(ny):  # y (row)
-        for i in range(nx):  # x (col)
-            l_deg, b_deg = pix_to_galactic_l_b(wcs.celestial, i, j)
+    lock = Lock()
 
-            v_max, v_min = calc_v_dev(float(l_deg), float(b_deg),
-                                      h=5, r_gal=20, r_sun=8.5, v_sun=220,
-                                      model=model, v_dev=v_dev)
-
-            vmax_map[j, i] = v_max
-            vmin_map[j, i] = v_min
-
-            # 正速度: 各像素只保留比v_max大的部分
-            pos_mask[:, j, i] = vel_axis > v_max
-            # 负速度: 各像素只保留比v_min小的部分
-            neg_mask[:, j, i] = vel_axis < v_min
+    def worker(j, i):
+        l_deg, b_deg = pix_to_galactic_l_b(celestial_wcs, i, j)
+        v_max, v_min = calc_v_dev(float(l_deg), float(b_deg),
+                                  h=5, r_gal=20, r_sun=8.5, v_sun=220,
+                                  model=model, v_dev=v_dev)
+        with lock:
             pbar.update(1)
+        return j, i, v_max, v_min
+
+    # Run per-pixel vdev computation in parallel (threads) with tqdm updates
+    results = Parallel(n_jobs=-1, backend="threading")(
+        delayed(worker)(j, i)
+        for j in range(ny) for i in range(nx)
+    )
     pbar.close()
+    t2 = time.time()
+    print(f"Computed v_max/v_min maps in {t2 - t1:.4f} s")
+
+    # Fill vmin/vmax maps
+    for j, i, v_max, v_min in results:
+        vmax_map[j, i] = v_max
+        vmin_map[j, i] = v_min
+    t3 = time.time()
+    print(f"Filled v_max/v_min maps in {t3 - t2:.4f} s")
+
+    # Vectorized mask construction across the whole cube
+    # pos: keep v > v_max(pixel); neg: keep v < v_min(pixel)
+    vel3 = vel_axis[:, None, None]
+    pos_mask = vel3 > vmax_map[None, :, :]
+    neg_mask = vel3 < vmin_map[None, :, :]
+    t4 = time.time()
+    print(f"Constructed masks in {t4 - t3:.4f} s")
 
     # 计算谱轴范围
     # 正速度: np.min(vmax_map) < v <= np.max(v)
@@ -103,13 +126,18 @@ def process_cube_mask_by_vdev(fits_in,
     # 建立mask dask cube 以便保存（spectral_cube支持自带mask）
     pos_cube = sc(data=np.where(pos_mask, data, 0)*cube.unit, wcs=cube.wcs)
     neg_cube = sc(data=np.where(neg_mask, data, 0)*cube.unit, wcs=cube.wcs)
-    # 裁剪后再存
+    # 裁剪速度轴范围（去掉不必要的速度通道以减小文件大小）
     pos_cube_slab = pos_cube.spectral_slab(vmax_global * u.km/u.s, max_v * u.km/u.s)
     neg_cube_slab = neg_cube.spectral_slab(min_v * u.km/u.s, vmin_global * u.km/u.s)
+
+    t5 = time.time()
+    print(f"Built masked cubes in {t5 - t4:.4f} s")
 
     # 直接用 spectral_cube 提供的 write 方法保存，header自动正确
     pos_cube_slab.write(fits_out_pos_minvmax, overwrite=True)
     neg_cube_slab.write(fits_out_neg_maxvmin, overwrite=True)
+    t6 = time.time()
+    print(f"Wrote output FITS files in {t6 - t5:.4f} s")
 
     return {
         "vmax_global": vmax_global,

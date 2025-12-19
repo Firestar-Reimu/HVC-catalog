@@ -25,6 +25,6 @@ Return:
 
 Notes:
 - Angles l and b are in degrees.
-- model choices: 'simple', 'univ', 'linear', 'linear2'.
+- model choices: 'simple', 'univ', 'linear', 'power'.
 - Implementation mirrors the original Python code's numeric behavior (within C floating point limits).
 ```

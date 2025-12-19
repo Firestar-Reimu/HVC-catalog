@@ -380,8 +380,8 @@ def v_rot_power(r):
 # %%
 # Calculate V_max and V_min for given (l, b, h, r_gal)
 # Simple rotation curve model
-def calc_v_max_min_simple(l, b, h, r_gal, r_sun=8.5, v_sun = 220):
-    v_sun = v_rot_simple(r_sun, v_sun)
+def calc_v_max_min_simple(l, b, h, r_gal, r_sun=8.5, v_sun = 220, r_cut=0.5):
+    v_sun = v_rot_simple(r_sun, v_sun, r_cut)
     if r_sun < r_gal < 2 * r_sun:
         R_min, R_max = calc_R_min_max_1(l, b, h, r_gal, r_sun)
     elif 2 * r_sun < r_gal < np.sqrt(5) * r_sun:
@@ -466,9 +466,9 @@ def calc_v_max_min_power(l, b, h, r_gal, v_sun = 220):
 
 # %%
 # Deviation Velocity
-def calc_v_dev_py(l, b, h=5, r_gal=20, r_sun=8.5, v_sun=220, model='univ', v_dev=50):
+def calc_v_dev_py(l, b, h=5, r_gal=20, r_sun=8.5, v_sun=220, r_cut=0.5, model='univ', v_dev=50):
     if model == 'simple':
-        v_max, v_min = calc_v_max_min_simple(l, b, h, r_gal, r_sun, v_sun)
+        v_max, v_min = calc_v_max_min_simple(l, b, h, r_gal, r_sun, v_sun, r_cut)
     elif model == 'univ':
         v_max, v_min = calc_v_max_min_univ(l, b, h, r_gal)
     elif model == 'linear':
