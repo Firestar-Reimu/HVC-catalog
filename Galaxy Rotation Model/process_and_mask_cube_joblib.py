@@ -29,9 +29,9 @@ from tqdm import tqdm
 from astropy.coordinates import SkyCoord
 import os
 from spectral_cube import SpectralCube as sc
+from joblib import Parallel, delayed
 import time
 
-# try import the C extension (or fallback to python implementation if you have it)
 from rotation_model import calc_v_dev
 
 def pix_to_galactic_l_b(celestial_wcs, xpix, ypix):
@@ -45,6 +45,7 @@ def pix_to_galactic_l_b(celestial_wcs, xpix, ypix):
     else:
         return lonlat[0], lonlat[1]
 
+
 def process_cube_mask_by_vdev(fits_in,
                              fits_out_pos_minvmax,
                              fits_out_neg_maxvmin,
@@ -55,67 +56,67 @@ def process_cube_mask_by_vdev(fits_in,
     t0 = time.time()
     cube = sc.read(fits_in).with_spectral_unit(u.km / u.s)
 
-    cube = sc.read(fits_in).with_spectral_unit(u.km / u.s)
-
     data = cube.unmasked_data[:].value  # (v, y, x)
     wcs = cube.wcs
+    celestial_wcs = wcs.celestial
     ny, nx = data.shape[-2], data.shape[-1]
     vel_axis = cube.spectral_axis.value
-
-    t1 = time.time()
-    print(f"Loaded cube {fits_in}: shape={data.shape}, took {t1 - t0:.4f} s")
 
     vmax_map = np.full((ny, nx), np.nan, dtype=float)
     vmin_map = np.full((ny, nx), np.nan, dtype=float)
 
-    pos_mask = np.zeros_like(data, dtype=bool)
-    neg_mask = np.zeros_like(data, dtype=bool)
+    t1 = time.time()
+    print(f"Loaded cube in {t1 - t0:.4f} s")
+
+    # Worker function without lock or tqdm update (not pickleable in multiprocessing)
+    def worker(j, i):
+        l_deg, b_deg = pix_to_galactic_l_b(celestial_wcs, i, j)
+        v_max, v_min = calc_v_dev(float(l_deg), float(b_deg),
+                                  h, r_gal, r_sun, v_sun, r_cut,
+                                  model=model, v_dev=v_dev)
+        return j, i, v_max, v_min
+
+    # Use tqdm to show progress after Parallel completes (joblib doesn't support real-time updates easily)
+    with tqdm(total=nx * ny, desc="Calc vdev & mask") as pbar:
+        # Run per-pixel vdev computation in parallel (processes with loky backend)
+        results = Parallel(n_jobs=-1, backend="loky", verbose=1)(
+            delayed(worker)(j, i)
+            for j in range(ny) for i in range(nx)
+        )
+        pbar.update(nx * ny)  # Update progress bar once done
 
     t2 = time.time()
     print(f"Computed v_max/v_min maps in {t2 - t1:.4f} s")
 
-    pbar = tqdm(total=nx * ny, desc="Calc vdev & mask")
-    for j in range(ny):  # y (row)
-        for i in range(nx):  # x (col)
-            l_deg, b_deg = pix_to_galactic_l_b(wcs.celestial, i, j)
+    # 填充 vmax_map, vmin_map
+    for j, i, v_max, v_min in results:
+        vmax_map[j, i] = v_max
+        vmin_map[j, i] = v_min
 
-            v_max, v_min = calc_v_dev(float(l_deg), float(b_deg),
-                                      h, r_gal, r_sun, v_sun, r_cut,
-                                      model=model, v_dev=v_dev)
-
-            vmax_map[j, i] = v_max
-            vmin_map[j, i] = v_min
-
-            # 正速度: 各像素只保留比v_max大的部分
-            pos_mask[:, j, i] = vel_axis > v_max
-            # 负速度: 各像素只保留比v_min小的部分
-            neg_mask[:, j, i] = vel_axis < v_min
-            pbar.update(1)
-    pbar.close()
+    # -------------- 构造 mask（向量化） --------------
+    vel3 = vel_axis[:, None, None]
+    pos_mask = vel3 > vmax_map[None, :, :]
+    neg_mask = vel3 < vmin_map[None, :, :]
 
     t3 = time.time()
     print(f"Constructed masks in {t3 - t2:.4f} s")
 
-    # 计算谱轴范围
-    # 正速度: np.min(vmax_map) < v <= np.max(v)
+    # 计算 global 边界
     vmax_global = np.min(vmax_map)
     max_v = np.max(vel_axis)
-
-    # 负速度: np.min(v) <= v < np.max(vmin_map)
     min_v = np.min(vel_axis)
     vmin_global = np.max(vmin_map)
 
-    # 建立mask dask cube 以便保存（spectral_cube支持自带mask）
-    pos_cube = sc(data=np.where(pos_mask, data, 0)*cube.unit, wcs=cube.wcs)
-    neg_cube = sc(data=np.where(neg_mask, data, 0)*cube.unit, wcs=cube.wcs)
+    # 建立并写入 cube
+    pos_cube = sc(data=np.where(pos_mask, data, 0) * cube.unit, wcs=cube.wcs)
+    neg_cube = sc(data=np.where(neg_mask, data, 0) * cube.unit, wcs=cube.wcs)
 
-    pos_cube_slab = pos_cube.spectral_slab(vmax_global * u.km/u.s, max_v * u.km/u.s)
-    neg_cube_slab = neg_cube.spectral_slab(min_v * u.km/u.s, vmin_global * u.km/u.s)
+    pos_cube_slab = pos_cube.spectral_slab(vmax_global * u.km / u.s, max_v * u.km / u.s)
+    neg_cube_slab = neg_cube.spectral_slab(min_v * u.km / u.s, vmin_global * u.km / u.s)
 
     t4 = time.time()
     print(f"Built masked cubes in {t4 - t3:.4f} s")
 
-    # 直接用 spectral_cube 提供的 write 方法保存，header自动正确
     pos_cube_slab.write(fits_out_pos_minvmax, overwrite=True)
     neg_cube_slab.write(fits_out_neg_maxvmin, overwrite=True)
 
@@ -143,7 +144,7 @@ if __name__ == "__main__":
     p.add_argument("--v_sun", type=float, default=220.0, help="Solar orbital velocity in km/s (default 220), only used in model=simple")
     p.add_argument("--r_cut", type=float, default=0.5, help="Cutoff radius for solid body rotation in kpc (default 0.5), only used in model=simple")
     p.add_argument("--model", type=str, default="univ", choices=("simple","univ","linear","power"))
-    p.add_argument("--vdev", type=float, default=50.0, help="dev passed into calc_v_dev (default 50)")
+    p.add_argument("--vdev", type=float, default=0.0, help="dev passed into calc_v_dev (default 0)")
     args = p.parse_args()
 
     if args.out is None:

@@ -1,8 +1,8 @@
 ## **前言**
 
-高速云（HVCs，High-velocity clouds）是在银河系的银晕中发现的大量视向速度较高的气体云 [(Wakker & van Woerden 1997)](https://scixplorer.org/abs/1997ARA&A..35..217W/abstract)。传统上认为，在本地静止标准（LSR）中的视向速度超过$70 \sim 90\,\mathrm{km/s}$的气体云是高速云。但我们知道，在以太阳为原点的参考系下，银河系在不同的银经$l$处，旋转的视向速度是不同的，最大速度可以超过$100\,\mathrm{km/s}$，如下图（图源 [(Reid et al. 2019)](https://scixplorer.org/abs/2019ApJ...885..131R/abstract)，HI数据来自LAB巡天）：
+高速云（HVCs，High-velocity clouds）是在银河系的银晕中发现的大量视向速度较高的气体云 [(Wakker & van Woerden 1997)](https://scixplorer.org/abs/1997ARA&A..35..217W/abstract)。传统上认为，在本地静止标准（LSR）中的视向速度超过$70 \sim 90\,\mathrm{km/s}$的气体云是高速云。但我们知道，在以太阳为原点的参考系下，银河系在不同的银经$l$处，旋转的视向速度是不同的，最大速度可以超过$100\,\mathrm{km/s}$，如下图（图源 [(Reid et al. 2019)](https://scixplorer.org/abs/2019ApJ...885..131R/abstract)，HI数据来自LAB巡天，积分范围为$|b| < 5^\circ$）：
 
-![](./HI_LV.jpg)
+![](./Figures/HI_LV.jpg)
 
 而在 [(Wakker 1991)](https://scixplorer.org/abs/1991A&A...250..499W/abstract) 的论文中提出了“偏差速度（deviation velocity）”的概念，也就是将视向速度$v_{\mathrm{LSR}}$与银河系旋转模型对比，考虑在特定的银经$l$和银纬$b$下，银河系旋转速度可能的最大值与最小值（也是绝对值的最大值），完全排除银河系旋转速度的干扰。
 
@@ -28,7 +28,7 @@ $$
 
 银心坐标系中太阳的坐标为$\vec{r}_\odot = (0, r_\odot, 0)$，速度沿$x$轴正方向，即$\vec{v}_\odot = (v_\odot, 0, 0)$。
 
-![](./geometry1.png)
+![](./Figures/geometry1.png)
 
 假设有一个点P跟随银盘旋转运动，在垂直于银盘的方向无速度。P点在银心坐标系中坐标为$\vec{r} = (r_x, r_y, r_z)$，速度为$\vec{v} = (v_x, v_y, 0)$。在太阳坐标系中，太阳指向P的矢量是$\vec{d}$，则P的位置可以用银经$l$、银纬$b$和距离$d$表示为：
 $$
@@ -51,7 +51,7 @@ $$
 v_x \sin{l} - v_y \cos{l} = v \frac{r_{\odot}}{r_{xy}} \sin{l}
 $$
 
-![](./geometry2.png)
+![](./Figures/geometry2.png)
 
 如图，Q为P在银盘平面的投影。在银心、太阳和Q点构成的三角形中，由正弦定理得：
 $$
@@ -134,7 +134,7 @@ r_{\mathrm{gal}}, & \cos{l} < 0
 \end{cases}
 $$
 
-![](./state1.png)
+![](./Figures/state1.png)
 
 2. $r_\odot \leqslant r_b = h/\tan{b} < 2r_\odot$
 
@@ -158,7 +158,7 @@ r_l, & \cos{l} < 0
 \end{cases}
 $$
 
-![](./state2.png)
+![](./Figures/state2.png)
 
 3. $r_b = h/\tan{b} < r_\odot$
 
@@ -184,7 +184,7 @@ r_l, & \cos{l} < 0
 \end{cases}
 $$
 
-![](./state3.png)
+![](./Figures/state3.png)
 
 #### **圆锥与圆柱相交**
 
@@ -206,6 +206,8 @@ $$
 z^2 = [r_{\mathrm{gal}}^2 - 2r_\odot y + r_\odot^2] \tan^2{b}
 $$
 的一部分。
+
+![](./Figures/intersect.png)
 
 考虑圆$x^2 + y^2 = r_{\mathrm{gal}}^2$与$x^2 + (y-r_\odot)^2 = r_b^2$的交点：
 $$
@@ -779,9 +781,17 @@ v(R) =
     220\,\mathrm{km/s},\quad R \geqslant 0.5\,\mathrm{kpc}
 \end{cases}
 $$
-由于在$0 \leqslant R < 0.5\,\mathrm{kpc}$的区间内$\dfrac{v}{R}$为常数（相当于假设这部分的银河系为刚体），上面讨论的结论也适用于该模型。代入计算可以得到与该论文中相同的图：
+由于在$0 \leqslant R < 0.5\,\mathrm{kpc}$的区间内$\dfrac{v}{R}$为常数（相当于假设这部分的银河系为刚体），上面讨论的结论也适用于该模型。代入计算可以得到与该论文图1相同的图：
 
-![](./Galaxy_Rotation_Model.png)
+![](./Figures/Galaxy_Rotation_Model.png)
+
+使用 [(Reid et al. 2019)](https://scixplorer.org/abs/2019ApJ...885..131R/abstract) 基于 [(Persic et al. 1996)](https://scixplorer.org/abs/1996MNRAS.281...27P/abstract) 给出的通用旋转曲线模型（其中$r_\odot = 8.15\,\mathrm{kpc}$），设：
+$$
+r_{\mathrm{gal}} = 20\,\mathrm{kpc},\quad h = 5\,\mathrm{kpc}
+$$
+如下图，可以发现与HI4PI巡天得到的速度图（背景图，积分范围为$|b| < 5^\circ$）非常吻合：
+
+![](./Figures/Galaxy_Rotation_Model_HI4PI.png)
 
 ## **讨论**
 
@@ -789,7 +799,7 @@ $$
 
 该模型有一些不同的变种：
 
-- 非常数的旋转曲线：目前公认最准确的旋转曲线模型是 [(Reid et al. 2019)](https://scixplorer.org/abs/2019ApJ...885..131R/abstract) 基于 [(Persic et al. 1996)](https://scixplorer.org/abs/1996MNRAS.281...27P/abstract) 给出的通用旋转曲线模型。此时我们需要将$\dfrac{v(R)}{R}$看作整体求极值，此时$R$的取值即为上面讨论的$[R_{\mathrm{min}}, R_{\mathrm{max}}]$，在这个范围内代入$v(R)$计算旋转速度，一般只能通过数值解法求解$\dfrac{v(R)}{R}$的极值。
+- 非常数的旋转曲线：目前公认最准确的旋转曲线模型是 [(Reid et al. 2019)](https://scixplorer.org/abs/2019ApJ...885..131R/abstract) 基于 [(Persic et al. 1996)](https://scixplorer.org/abs/1996MNRAS.281...27P/abstract) 给出的通用旋转曲线模型，其余的模型还有 [(Russeil et al. 2017)](https://scixplorer.org/abs/2017A&A...601L...5R/abstract) 给出的幂律模型和 [(Zhou et al. 2023)](https://scixplorer.org/abs/2023ApJ...946...73Z/abstract) 给出的直线模型等。理论上我们需要将$\dfrac{v(R)}{R}$看作整体求极值，此时$R$的取值即为上面讨论的$[R_{\mathrm{min}}, R_{\mathrm{max}}]$，在这个范围内解出极值后代入$v(R)$计算旋转速度。但实际上只要$\dfrac{v(R)}{R}$在$R > 0$时单调减小，即可直接对$R$求极值。考虑幂函数近似，设$v \propto R^k$，$\dfrac{v(R)}{R}$在$R > 0$时单调减小等价于$k \leqslant 1$，这也意味着$v(R)$在$R > 0$时是（开口向下的）凸函数。从观测上讲，一般的旋转曲线模型都符合这一条件，因此可以直接通过求$R$的极值获得$v$的极值。
 - 考虑银河系边缘比中间厚，例如 [(van Woerden et al. 2004)](https://scixplorer.org/abs/2004ASSL..312.....V/abstract) 第2.1节使用的边缘抛物线模型：
   $$
   z_{\mathrm{max}} =

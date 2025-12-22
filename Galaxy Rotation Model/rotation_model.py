@@ -1,11 +1,11 @@
-# %%
 import numpy as np
+from numpy.polynomial import Polynomial as P
 
+# Degree to Radian conversion trigonometric functions
 sin = lambda degrees: np.sin(np.deg2rad(degrees))
 cos = lambda degrees: np.cos(np.deg2rad(degrees))
 tan = lambda degrees: np.tan(np.deg2rad(degrees))
 
-# %%
 # r_sun < r_gal < 2 r_sun
 def calc_R_min_max_1(l, b, h, r_gal, r_sun):
     l = l % 360
@@ -13,14 +13,14 @@ def calc_R_min_max_1(l, b, h, r_gal, r_sun):
         b = 1e-10
     r_b = h / np.abs(tan(b))
     r_l = np.sqrt(r_sun**2 + r_b**2 - 2 * r_sun * r_b * cos(l))
-    if r_b >= r_gal + r_sun: # 1
+    if r_b >= r_gal + r_sun:  # 1
         if cos(l) >= 0:
             R_min = r_sun * np.abs(sin(l))
             R_max = r_gal
         else:
             R_min = r_sun
             R_max = r_gal
-    elif 2 * r_sun <= r_b < r_gal + r_sun: # 2
+    elif 2 * r_sun <= r_b < r_gal + r_sun:  # 2
         y_0 = (r_gal**2 + r_sun**2 - r_b**2) / (2 * r_sun)
         if cos(l) >= (r_sun - y_0) / r_b:
             R_min = r_sun * np.abs(sin(l))
@@ -31,7 +31,7 @@ def calc_R_min_max_1(l, b, h, r_gal, r_sun):
         else:
             R_min = r_sun
             R_max = r_gal
-    elif np.sqrt(r_gal**2 - r_sun**2) <= r_b < 2 * r_sun: # 3
+    elif np.sqrt(r_gal**2 - r_sun**2) <= r_b < 2 * r_sun:  # 3
         y_0 = (r_gal**2 + r_sun**2 - r_b**2) / (2 * r_sun)
         if cos(l) >= r_b / (2 * r_sun):
             R_min = r_sun * np.abs(sin(l))
@@ -42,7 +42,7 @@ def calc_R_min_max_1(l, b, h, r_gal, r_sun):
         else:
             R_min = r_sun
             R_max = r_gal
-    elif r_sun <= r_b < np.sqrt(r_gal**2 - r_sun**2): # 4
+    elif r_sun <= r_b < np.sqrt(r_gal**2 - r_sun**2):  # 4
         y_0 = (r_gal**2 + r_sun**2 - r_b**2) / (2 * r_sun)
         if cos(l) >= r_b / (2 * r_sun):
             R_min = r_sun * np.abs(sin(l))
@@ -56,8 +56,8 @@ def calc_R_min_max_1(l, b, h, r_gal, r_sun):
         else:
             R_min = r_sun
             R_max = r_gal
-    elif r_gal - r_sun <= r_b < r_sun: # 5
-        if cos(l) >= r_b / (2 * r_sun):
+    elif r_gal - r_sun <= r_b < r_sun:  # 5
+        if cos(l) >= r_b / r_sun:
             R_min = r_l
             R_max = r_sun
         elif r_b / (2 * r_sun) <= cos(l) < r_b / r_sun:
@@ -72,7 +72,7 @@ def calc_R_min_max_1(l, b, h, r_gal, r_sun):
         else:
             R_min = r_sun
             R_max = r_l
-    else: # 6
+    else:  # 6
         if cos(l) >= r_b / r_sun:
             R_min = r_l
             R_max = r_sun
@@ -94,14 +94,14 @@ def calc_R_min_max_2(l, b, h, r_gal, r_sun):
         b = 1e-10
     r_b = h / np.abs(tan(b))
     r_l = np.sqrt(r_sun**2 + r_b**2 - 2 * r_sun * r_b * cos(l))
-    if r_b >= r_gal + r_sun: # 1
+    if r_b >= r_gal + r_sun:  # 1
         if cos(l) >= 0:
             R_min = r_sun * np.abs(sin(l))
             R_max = r_gal
         else:
             R_min = r_sun
             R_max = r_gal
-    elif 2 * r_sun <= r_b < r_gal + r_sun: # 2
+    elif 2 * r_sun <= r_b < r_gal + r_sun:  # 2
         y_0 = (r_gal**2 + r_sun**2 - r_b**2) / (2 * r_sun)
         if cos(l) >= (r_sun - y_0) / r_b:
             R_min = r_sun * np.abs(sin(l))
@@ -112,7 +112,7 @@ def calc_R_min_max_2(l, b, h, r_gal, r_sun):
         else:
             R_min = r_sun
             R_max = r_gal
-    elif np.sqrt(r_gal**2 - r_sun**2) <= r_b < 2 * r_sun: # 3
+    elif np.sqrt(r_gal**2 - r_sun**2) <= r_b < 2 * r_sun:  # 3
         y_0 = (r_gal**2 + r_sun**2 - r_b**2) / (2 * r_sun)
         if cos(l) >= r_b / (2 * r_sun):
             R_min = r_sun * np.abs(sin(l))
@@ -123,7 +123,7 @@ def calc_R_min_max_2(l, b, h, r_gal, r_sun):
         else:
             R_min = r_sun
             R_max = r_gal
-    elif r_gal - r_sun <= r_b < np.sqrt(r_gal**2 - r_sun**2): # 4
+    elif r_gal - r_sun <= r_b < np.sqrt(r_gal**2 - r_sun**2):  # 4
         y_0 = (r_gal**2 + r_sun**2 - r_b**2) / (2 * r_sun)
         if cos(l) >= r_b / (2 * r_sun):
             R_min = r_sun * np.abs(sin(l))
@@ -137,7 +137,7 @@ def calc_R_min_max_2(l, b, h, r_gal, r_sun):
         else:
             R_min = r_sun
             R_max = r_gal
-    elif r_sun <= r_b < r_gal - r_sun: # 5
+    elif r_sun <= r_b < r_gal - r_sun:  # 5
         if cos(l) >= r_b / (2 * r_sun):
             R_min = r_sun * np.abs(sin(l))
             R_max = r_sun
@@ -147,7 +147,7 @@ def calc_R_min_max_2(l, b, h, r_gal, r_sun):
         else:
             R_min = r_sun
             R_max = r_l
-    else: # 6
+    else:  # 6
         if cos(l) >= r_b / r_sun:
             R_min = r_l
             R_max = r_sun
@@ -169,14 +169,14 @@ def calc_R_min_max_3(l, b, h, r_gal, r_sun):
         b = 1e-10
     r_b = h / np.abs(tan(b))
     r_l = np.sqrt(r_sun**2 + r_b**2 - 2 * r_sun * r_b * cos(l))
-    if r_b >= r_gal + r_sun: # 1
+    if r_b >= r_gal + r_sun:  # 1
         if cos(l) >= 0:
             R_min = r_sun * np.abs(sin(l))
             R_max = r_gal
         else:
             R_min = r_sun
             R_max = r_gal
-    elif np.sqrt(r_gal**2 - r_sun**2) <= r_b < r_gal + r_sun: # 2
+    elif np.sqrt(r_gal**2 - r_sun**2) <= r_b < r_gal + r_sun:  # 2
         y_0 = (r_gal**2 + r_sun**2 - r_b**2) / (2 * r_sun)
         if cos(l) >= (r_sun - y_0) / r_b:
             R_min = r_sun * np.abs(sin(l))
@@ -187,7 +187,7 @@ def calc_R_min_max_3(l, b, h, r_gal, r_sun):
         else:
             R_min = r_sun
             R_max = r_gal
-    elif 2 * r_sun <= r_b < np.sqrt(r_gal**2 - r_sun**2): # 3
+    elif 2 * r_sun <= r_b < np.sqrt(r_gal**2 - r_sun**2):  # 3
         y_0 = (r_gal**2 + r_sun**2 - r_b**2) / (2 * r_sun)
         if cos(l) >= 0:
             R_min = r_sun * np.abs(sin(l))
@@ -198,7 +198,7 @@ def calc_R_min_max_3(l, b, h, r_gal, r_sun):
         else:
             R_min = r_sun
             R_max = r_gal
-    elif r_gal - r_sun <= r_b < 2 * r_sun: # 4
+    elif r_gal - r_sun <= r_b < 2 * r_sun:  # 4
         y_0 = (r_gal**2 + r_sun**2 - r_b**2) / (2 * r_sun)
         if cos(l) >= r_b / (2 * r_sun):
             R_min = r_sun * np.abs(sin(l))
@@ -212,7 +212,7 @@ def calc_R_min_max_3(l, b, h, r_gal, r_sun):
         else:
             R_min = r_sun
             R_max = r_gal
-    elif r_sun <= r_b < r_gal - r_sun: # 5
+    elif r_sun <= r_b < r_gal - r_sun:  # 5
         if cos(l) >= r_b / (2 * r_sun):
             R_min = r_sun * np.abs(sin(l))
             R_max = r_sun
@@ -222,7 +222,7 @@ def calc_R_min_max_3(l, b, h, r_gal, r_sun):
         else:
             R_min = r_sun
             R_max = r_l
-    else: # 6
+    else:  # 6
         if cos(l) >= r_b / r_sun:
             R_min = r_l
             R_max = r_sun
@@ -244,14 +244,14 @@ def calc_R_min_max_4(l, b, h, r_gal, r_sun):
         b = 1e-10
     r_b = h / np.abs(tan(b))
     r_l = np.sqrt(r_sun**2 + r_b**2 - 2 * r_sun * r_b * cos(l))
-    if r_b >= r_gal + r_sun: # 1
+    if r_b >= r_gal + r_sun:  # 1
         if cos(l) >= 0:
             R_min = r_sun * np.abs(sin(l))
             R_max = r_gal
         else:
             R_min = r_sun
             R_max = r_gal
-    elif np.sqrt(r_gal**2 - r_sun**2) <= r_b < r_gal + r_sun: # 2
+    elif np.sqrt(r_gal**2 - r_sun**2) <= r_b < r_gal + r_sun:  # 2
         y_0 = (r_gal**2 + r_sun**2 - r_b**2) / (2 * r_sun)
         if cos(l) >= (r_sun - y_0) / r_b:
             R_min = r_sun * np.abs(sin(l))
@@ -262,7 +262,7 @@ def calc_R_min_max_4(l, b, h, r_gal, r_sun):
         else:
             R_min = r_sun
             R_max = r_gal
-    elif r_gal - r_sun <= r_b < np.sqrt(r_gal**2 - r_sun**2): # 3
+    elif r_gal - r_sun <= r_b < np.sqrt(r_gal**2 - r_sun**2):  # 3
         y_0 = (r_gal**2 + r_sun**2 - r_b**2) / (2 * r_sun)
         if cos(l) >= 0:
             R_min = r_sun * np.abs(sin(l))
@@ -273,14 +273,14 @@ def calc_R_min_max_4(l, b, h, r_gal, r_sun):
         else:
             R_min = r_sun
             R_max = r_gal
-    elif 2 * r_sun <= r_b < r_gal - r_sun: # 4
+    elif 2 * r_sun <= r_b < r_gal - r_sun:  # 4
         if cos(l) >= 0:
             R_min = r_sun * np.abs(sin(l))
             R_max = r_sun
         else:
             R_min = r_sun
             R_max = r_l
-    elif r_sun <= r_b < 2 * r_sun: # 5
+    elif r_sun <= r_b < 2 * r_sun:  # 5
         if cos(l) >= r_b / (2 * r_sun):
             R_min = r_sun * np.abs(sin(l))
             R_max = r_sun
@@ -290,7 +290,7 @@ def calc_R_min_max_4(l, b, h, r_gal, r_sun):
         else:
             R_min = r_sun
             R_max = r_l
-    else: # 6
+    else:  # 6
         if cos(l) >= r_b / r_sun:
             R_min = r_l
             R_max = r_sun
@@ -305,8 +305,6 @@ def calc_R_min_max_4(l, b, h, r_gal, r_sun):
             R_max = r_l
     return R_min, R_max
 
-
-# %%
 # Simple rotation curve model
 # V_rot = 220 km/s where R > 0.5 kpc, else V_rot = 440 * R
 # Wakker 1991: 1991A&A...250..499W
@@ -314,7 +312,6 @@ def v_rot_simple(r, v_sun=220, r_cut=0.5):
     v_rot = np.where(r > r_cut, v_sun, (1 / r_cut) * v_sun * r)
     return v_rot
 
-# %%
 # Universal rotation curve model
 # Persic et al. 1996: 1996MNRAS.281...27P
 # Reid et al. 2019: 2019ApJ...885..131R
@@ -358,29 +355,52 @@ def v_rot_univ(r, a2=0.96, a3=1.62):
     Vr = (term1 / term2) * np.sqrt(term3 + term4)  # km/s
     return Vr
 
-# %%
 # Linear rotation curve model
-# V_rot = 229 - 1.7 * (R - R_sun)
-# Eilers et al. 2019: 2019ApJ...871...120E
+# V_rot = 234.04 - 1.83 * (R - R_sun)
+# Zhou et al. 2023: 2023ApJ...946...73Z
 def v_rot_linear(r):
     r_sun = 8.122
-    v_rot = 229 - 1.7 * (r - r_sun)
+    v_rot = 234.04 - 1.83 * (r - r_sun)
     return v_rot
 
-# %%
-# Power law rotation curve model
-# V_rot = 240 * 1.022 * (R / 8.34)^0.0803
-# Russeil et al. 2017: 2017A&A...601L...5R
-def v_rot_power(r):
-    r_sun = 8.34
-    v_sun = 240
-    v_rot = v_sun * 1.022 * (r / r_sun)**0.0803
+# Combined Polynomial rotation curve model
+# Clemens 1985: 1985ApJ...295..422C
+def v_rot_poly(r):
+    v_rot = np.zeros_like(r)
+    r_sun = 8.5
+    # conditions for r
+    condition1 = r < 0.09 * r_sun
+    condition2 = (0.09 * r_sun <= r) & (r < 0.45 * r_sun)
+    condition3 = (0.45 * r_sun <= r) & (r < 1.6 * r_sun)
+    condition4 = r >= 1.6 * r_sun
+    # r < 0.09 * r_sun
+    coeffs_A = [0, 3069.81, -15809.8, 43980.1, -68287.3, 54904, -17731]
+    poly_A = P(coeffs_A)
+    v_rot = np.where(condition1, poly_A(r), v_rot)
+    # (0.09 * r_sun <= r) & (r < 0.45 * r_sun)
+    coeffs_B = [325.0912, -248.1467, 231.87099, -110.73531, 25.073006, -2.110625]
+    poly_B = P(coeffs_B)
+    v_rot = np.where(condition2, poly_B(r), v_rot)
+    # (0.45 * r_sun <= r) & (r < 1.6 * r_sun)
+    coeffs_C = [
+        -2342.6564,
+        2507.60391,
+        -1024.068760,
+        224.562732,
+        -28.4080026,
+        2.0697271,
+        -0.08050808,
+        0.00129348,
+    ]
+    poly_C = P(coeffs_C)
+    v_rot = np.where(condition3, poly_C(r), v_rot)
+    # r >= 1.6 * r_sun
+    v_rot = np.where(condition4, 234.88, v_rot)
     return v_rot
 
-# %%
 # Calculate V_max and V_min for given (l, b, h, r_gal)
 # Simple rotation curve model
-def calc_v_max_min_simple(l, b, h, r_gal, r_sun=8.5, v_sun = 220, r_cut=0.5):
+def calc_v_max_min_simple(l, b, h, r_gal, r_sun=8.5, v_sun=220, r_cut=0.5):
     v_sun = v_rot_simple(r_sun, v_sun, r_cut)
     if r_sun < r_gal < 2 * r_sun:
         R_min, R_max = calc_R_min_max_1(l, b, h, r_gal, r_sun)
@@ -390,14 +410,14 @@ def calc_v_max_min_simple(l, b, h, r_gal, r_sun=8.5, v_sun = 220, r_cut=0.5):
         R_min, R_max = calc_R_min_max_3(l, b, h, r_gal, r_sun)
     else:
         R_min, R_max = calc_R_min_max_4(l, b, h, r_gal, r_sun)
+    if R_min == 0:
+        R_min = 1e-10
     v_R_min = (v_rot_simple(R_min) * r_sun / R_min - v_sun) * sin(l) * cos(b)
     v_R_max = (v_rot_simple(R_max) * r_sun / R_max - v_sun) * sin(l) * cos(b)
     v_max = np.maximum(v_R_min, v_R_max)
     v_min = np.minimum(v_R_min, v_R_max)
     return v_max, v_min
 
-
-# %%
 # Calculate V_max and V_min for given (l, b, h, r_gal)
 # Universal rotation curve model
 def calc_v_max_min_univ(l, b, h, r_gal):
@@ -411,14 +431,14 @@ def calc_v_max_min_univ(l, b, h, r_gal):
         R_min, R_max = calc_R_min_max_3(l, b, h, r_gal, r_sun)
     else:
         R_min, R_max = calc_R_min_max_4(l, b, h, r_gal, r_sun)
+    if R_min == 0:
+        R_min = 1e-10
     v_R_min = (v_rot_univ(R_min) * r_sun / R_min - v_sun) * sin(l) * cos(b)
     v_R_max = (v_rot_univ(R_max) * r_sun / R_max - v_sun) * sin(l) * cos(b)
     v_max = np.maximum(v_R_min, v_R_max)
     v_min = np.minimum(v_R_min, v_R_max)
     return v_max, v_min
 
-
-# %%
 # Calculate V_max and V_min for given (l, b, h, r_gal)
 # Linear rotation curve model
 def calc_v_max_min_linear(l, b, h, r_gal):
@@ -434,21 +454,17 @@ def calc_v_max_min_linear(l, b, h, r_gal):
         R_min, R_max = calc_R_min_max_4(l, b, h, r_gal, r_sun)
     if R_min == 0:
         R_min = 1e-10
-    if R_max == 0:
-        R_max = 1e-10
     v_R_min = (v_rot_linear(R_min) * r_sun / R_min - v_sun) * sin(l) * cos(b)
     v_R_max = (v_rot_linear(R_max) * r_sun / R_max - v_sun) * sin(l) * cos(b)
     v_max = np.maximum(v_R_min, v_R_max)
     v_min = np.minimum(v_R_min, v_R_max)
     return v_max, v_min
 
-
-# %%
 # Calculate V_max and V_min for given (l, b, h, r_gal)
-# Power law rotation curve model
-def calc_v_max_min_power(l, b, h, r_gal, v_sun = 220):
-    r_sun = 8.34
-    v_sun = v_rot_power(r_sun)
+# Polynomial rotation curve model
+def calc_v_max_min_poly(l, b, h, r_gal):
+    r_sun = 8.5
+    v_sun = v_rot_poly(r_sun)
     if r_sun < r_gal < 2 * r_sun:
         R_min, R_max = calc_R_min_max_1(l, b, h, r_gal, r_sun)
     elif 2 * r_sun < r_gal < np.sqrt(5) * r_sun:
@@ -457,24 +473,26 @@ def calc_v_max_min_power(l, b, h, r_gal, v_sun = 220):
         R_min, R_max = calc_R_min_max_3(l, b, h, r_gal, r_sun)
     else:
         R_min, R_max = calc_R_min_max_4(l, b, h, r_gal, r_sun)
-    v_R_min = (v_rot_power(R_min) * r_sun / R_min - v_sun) * sin(l) * cos(b)
-    v_R_max = (v_rot_power(R_max) * r_sun / R_max - v_sun) * sin(l) * cos(b)
+    if R_min == 0:
+        R_min = 1e-10
+    v_R_min = (v_rot_poly(R_min) * r_sun / R_min - v_sun) * sin(l) * cos(b)
+    v_R_max = (v_rot_poly(R_max) * r_sun / R_max - v_sun) * sin(l) * cos(b)
     v_max = np.maximum(v_R_min, v_R_max)
     v_min = np.minimum(v_R_min, v_R_max)
     return v_max, v_min
 
-
-# %%
 # Deviation Velocity
-def calc_v_dev_py(l, b, h=5, r_gal=20, r_sun=8.5, v_sun=220, r_cut=0.5, model='univ', v_dev=50):
-    if model == 'simple':
+def calc_v_dev(
+    l, b, h=5, r_gal=20, r_sun=8.5, v_sun=220, r_cut=0.5, model="univ", v_dev=0
+):
+    if model == "simple":
         v_max, v_min = calc_v_max_min_simple(l, b, h, r_gal, r_sun, v_sun, r_cut)
-    elif model == 'univ':
+    elif model == "univ":
         v_max, v_min = calc_v_max_min_univ(l, b, h, r_gal)
-    elif model == 'linear':
+    elif model == "linear":
         v_max, v_min = calc_v_max_min_linear(l, b, h, r_gal)
-    elif model == 'power':
-        v_max, v_min = calc_v_max_min_power(l, b, h, r_gal)
+    elif model == "poly":
+        v_max, v_min = calc_v_max_min_poly(l, b, h, r_gal)
     else:
-        raise ValueError("Invalid model. Choose from 'simple', 'univ', 'linear', 'power'.")
+        raise ValueError("Invalid model. Choose from 'simple', 'univ', 'linear'.")
     return v_max + v_dev, v_min - v_dev

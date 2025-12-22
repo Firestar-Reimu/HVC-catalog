@@ -25,14 +25,13 @@ Notes:
 """
 import astropy.units as u
 import numpy as np
-from tqdm import tqdm
 from astropy.coordinates import SkyCoord
 import os
 from spectral_cube import SpectralCube as sc
 import time
 
 # try import the C extension (or fallback to python implementation if you have it)
-from rotation_model import calc_v_dev
+from rotation_model_numpy import calc_v_dev
 
 def pix_to_galactic_l_b(celestial_wcs, xpix, ypix):
     lonlat = celestial_wcs.all_pix2world(xpix, ypix, 0)
@@ -55,43 +54,37 @@ def process_cube_mask_by_vdev(fits_in,
     t0 = time.time()
     cube = sc.read(fits_in).with_spectral_unit(u.km / u.s)
 
-    cube = sc.read(fits_in).with_spectral_unit(u.km / u.s)
-
     data = cube.unmasked_data[:].value  # (v, y, x)
     wcs = cube.wcs
     ny, nx = data.shape[-2], data.shape[-1]
     vel_axis = cube.spectral_axis.value
 
+    pos_mask = np.zeros_like(data, dtype=bool)
+    neg_mask = np.zeros_like(data, dtype=bool)
+
+    # Create meshgrids for i (x) and j (y)
+    i_grid, j_grid = np.meshgrid(np.arange(nx), np.arange(ny), indexing='ij')  # i_grid: (nx, ny), j_grid: (nx, ny)
+
+    # Vectorized computation of Galactic coordinates
+    l_deg, b_deg = pix_to_galactic_l_b(wcs.celestial, i_grid, j_grid)
+
     t1 = time.time()
     print(f"Loaded cube {fits_in}: shape={data.shape}, took {t1 - t0:.4f} s")
 
-    vmax_map = np.full((ny, nx), np.nan, dtype=float)
-    vmin_map = np.full((ny, nx), np.nan, dtype=float)
-
-    pos_mask = np.zeros_like(data, dtype=bool)
-    neg_mask = np.zeros_like(data, dtype=bool)
+    # Vectorized call to calc_v_dev
+    v_max, v_min = calc_v_dev(l_deg, b_deg,
+                              h, r_gal, r_sun, v_sun, r_cut,
+                              model=model, v_dev=v_dev)
 
     t2 = time.time()
     print(f"Computed v_max/v_min maps in {t2 - t1:.4f} s")
 
-    pbar = tqdm(total=nx * ny, desc="Calc vdev & mask")
-    for j in range(ny):  # y (row)
-        for i in range(nx):  # x (col)
-            l_deg, b_deg = pix_to_galactic_l_b(wcs.celestial, i, j)
+    vmax_map = v_max.T  # Transpose to (ny, nx)
+    vmin_map = v_min.T
 
-            v_max, v_min = calc_v_dev(float(l_deg), float(b_deg),
-                                      h, r_gal, r_sun, v_sun, r_cut,
-                                      model=model, v_dev=v_dev)
-
-            vmax_map[j, i] = v_max
-            vmin_map[j, i] = v_min
-
-            # 正速度: 各像素只保留比v_max大的部分
-            pos_mask[:, j, i] = vel_axis > v_max
-            # 负速度: 各像素只保留比v_min小的部分
-            neg_mask[:, j, i] = vel_axis < v_min
-            pbar.update(1)
-    pbar.close()
+    # Create masks: broadcast vel_axis to (nv, ny, nx)
+    pos_mask = vel_axis[:, None, None] > vmax_map[None, :, :]
+    neg_mask = vel_axis[:, None, None] < vmin_map[None, :, :]
 
     t3 = time.time()
     print(f"Constructed masks in {t3 - t2:.4f} s")
