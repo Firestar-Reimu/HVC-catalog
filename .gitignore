@@ -41,3 +41,7 @@
 ehthumbs.db
 Thumbs.db
 .directory
+
+# Text and Pictures
+*.txt
+*.png
