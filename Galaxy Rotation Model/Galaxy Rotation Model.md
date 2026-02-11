@@ -789,9 +789,9 @@ $$
 $$
 r_{\mathrm{gal}} = 20\,\mathrm{kpc},\quad h = 5\,\mathrm{kpc}
 $$
-如下图，可以发现与HI4PI巡天得到的速度图（背景图，积分范围为$|b| < 5^\circ$）非常吻合：
+如下图，可以发现与HI4PI巡天得到的速度图（背景图，积分范围为$|b| < 10^\circ$）非常吻合：
 
-![](./Figures/Galaxy_Rotation_Model_HI4PI.png)
+![](./Figures/HI4PI_LV_with_Rotation_Model.png)
 
 ## **讨论**
 

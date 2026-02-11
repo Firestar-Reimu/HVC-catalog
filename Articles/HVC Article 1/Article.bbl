@@ -6,11 +6,131 @@
 \providecommand{\doarXiv}[1]{\href{https://arxiv.org/abs/#1}{\nolinkurl{https://arxiv.org/abs/#1}}}
 
 % type= article
+\bibitem[{E.~A.~K. {Adams} {et~al.}(2013){Adams}, {Giovanelli}, \& {Haynes}}]{2013ApJ...768...77A}
+{Adams}, E. A.~K., {Giovanelli}, R., \& {Haynes}, M.~P. 2013, \bibinfo{title}{{A Catalog of Ultra-compact High Velocity Clouds from the ALFALFA Survey: Local Group Galaxy Candidates?},} \apj, 768, 77, \dodoi{10.1088/0004-637X/768/1/77}
+
+% type= article
+\bibitem[{S.-J. {Baek} {et~al.}(2015){Baek}, {Park}, {Ahn}, \& {Choo}}]{2015Ana...140..250B}
+{Baek}, S.-J., {Park}, A., {Ahn}, Y.-J., \& {Choo}, J. 2015, \bibinfo{title}{{Baseline correction using asymmetrically reweighted penalized least squares smoothing},} The Analyst, 140, 250, \dodoi{10.1039/C4AN01061B}
+
+% type= article
+\bibitem[{E. {Bajaja} {et~al.}(1985){Bajaja}, {Cappa de Nicolau}, {Cersosimo}, {Martin}, {Loiseau}, {Morras}, {Olano}, \& {Poeppel}}]{1985ApJS...58..143B}
+{Bajaja}, E., {Cappa de Nicolau}, C.~E., {Cersosimo}, J.~C., {et~al.} 1985, \bibinfo{title}{{A new general survey of high-velocity neutral hydrogen in the southern hemisphere.},} \apjs, 58, 143, \dodoi{10.1086/191033}
+
+% type= article
+\bibitem[{L. {Blitz} {et~al.}(1999){Blitz}, {Spergel}, {Teuben}, {Hartmann}, \& {Burton}}]{1999ApJ...514..818B}
+{Blitz}, L., {Spergel}, D.~N., {Teuben}, P.~J., {Hartmann}, D., \& {Burton}, W.~B. 1999, \bibinfo{title}{{High-Velocity Clouds: Building Blocks of the Local Group},} \apj, 514, 818, \dodoi{10.1086/306963}
+
+% type= article
+\bibitem[{R. {Braun} \& W.~B. {Burton}(1999){Braun} \& {Burton}}]{1999A&A...341..437B}
+{Braun}, R., \& {Burton}, W.~B. 1999, \bibinfo{title}{{The kinematic and spatial deployment of compact, isolated high-velocity clouds},} \aap, 341, 437, \dodoi{10.48550/arXiv.astro-ph/9810433}
+
+% type= article
+\bibitem[{R. {Braun} \& W.~B. {Burton}(2000){Braun} \& {Burton}}]{2000A&A...354..853B}
+{Braun}, R., \& {Burton}, W.~B. 2000, \bibinfo{title}{{High-resolution imaging of compact high-velocity clouds},} \aap, 354, 853, \dodoi{10.48550/arXiv.astro-ph/9912417}
+
+% type= article
+\bibitem[{D.~P. {Clemens}(1985){Clemens}}]{1985ApJ...295..422C}
+{Clemens}, D.~P. 1985, \bibinfo{title}{{Massachusetts-Stony Brook Galactic plane CO survey: the galactic disk rotation curve.},} \apj, 295, 422, \dodoi{10.1086/163386}
+
+% type= article
+\bibitem[{V. {de Heij} {et~al.}(2002){de Heij}, {Braun}, \& {Burton}}]{2002A&A...391..159D}
+{de Heij}, V., {Braun}, R., \& {Burton}, W.~B. 2002, \bibinfo{title}{{An automated search for compact high-velocity clouds in the Leiden/Dwingeloo Survey},} \aap, 391, 159, \dodoi{10.1051/0004-6361:20020870}
+
+% type= inproceedings
+\bibitem[{M. {Ester} {et~al.}(1996){Ester}, {Kriegel}, {Sander}, \& {Xu}}]{1996kddm.conf..226E}
+{Ester}, M., {Kriegel}, H.-P., {Sander}, J., \& {Xu}, X. 1996, \bibinfo{title}{{A Density-Based Algorithm for Discovering Clusters in Large Spatial Databases with Noise},} in Second International Conference on Knowledge Discovery and Data Mining (KDD'96). Proceedings of a conference held August 2-4, ed. D.~W. {Pfitzner} \& J.~K. {Salmon}, 226--331
+
+% type= book
+\bibitem[{D. {Hartmann} \& W.~B. {Burton}(1997){Hartmann} \& {Burton}}]{1997agnh.book.....H}
+{Hartmann}, D., \& {Burton}, W.~B. 1997, {Atlas of Galactic Neutral Hydrogen}
+
+% type= article
+\bibitem[{ {HI4PI Collaboration} {et~al.}(2016){HI4PI Collaboration}, {Ben Bekhti}, {Fl{\"o}er}, {Keller}, {Kerp}, {Lenz}, {Winkel}, {Bailin}, {Calabretta}, {Dedes}, \& et~al.}]{2016A&A...594A.116H}
+{HI4PI Collaboration}, {Ben Bekhti}, N., {Fl{\"o}er}, L., {et~al.} 2016, \bibinfo{title}{{HI4PI: A full-sky H I survey based on EBHIS and GASS},} \aap, 594, A116, \dodoi{10.1051/0004-6361/201629178}
+
+% type= article
+\bibitem[{A.~N.~M. {Hulsbosch}(1968){Hulsbosch}}]{1968BAN....20...33H}
+{Hulsbosch}, A.~N.~M. 1968, \bibinfo{title}{{High-velocity hydrogen complexes at high galactic latitudes},} \bain, 20, 33
+
+% type= article
+\bibitem[{A.~N.~M. {Hulsbosch} \& B.~P. {Wakker}(1988){Hulsbosch} \& {Wakker}}]{1988A&AS...75..191H}
+{Hulsbosch}, A.~N.~M., \& {Wakker}, B.~P. 1988, \bibinfo{title}{{A deep, nearly complete, survey of northern high-velocity clouds.},} \aaps, 75, 191
+
+% type= article
+\bibitem[{L.~G. Khachiyan(1996)Khachiyan}]{khachiyan1996rounding}
+Khachiyan, L.~G. 1996, \bibinfo{title}{Rounding of polytopes in the real number model of computation,} Mathematics of Operations Research, 21, 307
+
+% type= article
+\bibitem[{A. {Klypin} {et~al.}(1999){Klypin}, {Kravtsov}, {Valenzuela}, \& {Prada}}]{1999ApJ...522...82K}
+{Klypin}, A., {Kravtsov}, A.~V., {Valenzuela}, O., \& {Prada}, F. 1999, \bibinfo{title}{{Where Are the Missing Galactic Satellites?},} \apj, 522, 82, \dodoi{10.1086/307643}
+
+% type= article
+\bibitem[{A.~V. {Kravtsov} {et~al.}(2004){Kravtsov}, {Gnedin}, \& {Klypin}}]{2004ApJ...609..482K}
+{Kravtsov}, A.~V., {Gnedin}, O.~Y., \& {Klypin}, A.~A. 2004, \bibinfo{title}{{The Tumultuous Lives of Galactic Dwarfs and the Missing Satellites Problem},} \apj, 609, 482, \dodoi{10.1086/421322}
+
+% type= article
+\bibitem[{D. {Li} {et~al.}(2018){Li}, {Wang}, {Qian}, {Krco}, {Jiang}, {Yue}, {Jin}, {Zhu}, {Pan}, {Nan}, \& et~al.}]{2018IMMag..19..112L}
+{Li}, D., {Wang}, P., {Qian}, L., {et~al.} 2018, \bibinfo{title}{{FAST in Space: Considerations for a Multibeam, Multipurpose Survey Using China's 500-m Aperture Spherical Radio Telescope (FAST)},} IEEE Microwave Magazine, 19, 112, \dodoi{10.1109/MMM.2018.2802178}
+
+% type= article
+\bibitem[{D.~S. {Mathewson} {et~al.}(1974){Mathewson}, {Cleary}, \& {Murray}}]{1974ApJ...190..291M}
+{Mathewson}, D.~S., {Cleary}, M.~N., \& {Murray}, J.~D. 1974, \bibinfo{title}{{The Magellanic Stream.},} \apj, 190, 291, \dodoi{10.1086/152875}
+
+% type= article
+\bibitem[{B. {Moore} {et~al.}(1999){Moore}, {Ghigna}, {Governato}, {Lake}, {Quinn}, {Stadel}, \& {Tozzi}}]{1999ApJ...524L..19M}
+{Moore}, B., {Ghigna}, S., {Governato}, F., {et~al.} 1999, \bibinfo{title}{{Dark Matter Substructure within Galactic Halos},} \apjl, 524, L19, \dodoi{10.1086/312287}
+
+% type= article
+\bibitem[{V.~A. {Moss} {et~al.}(2013){Moss}, {McClure-Griffiths}, {Murphy}, {Pisano}, {Kummerfeld}, \& {Curran}}]{2013ApJS..209...12M}
+{Moss}, V.~A., {McClure-Griffiths}, N.~M., {Murphy}, T., {et~al.} 2013, \bibinfo{title}{{High-velocity Clouds in the Galactic All Sky Survey. I. Catalog},} \apjs, 209, 12, \dodoi{10.1088/0067-0049/209/1/12}
+
+% type= article
 \bibitem[{C.~A. {Muller} {et~al.}(1963){Muller}, {Oort}, \& {Raimond}}]{1963CRAS..257.1661M}
 {Muller}, C.~A., {Oort}, J.~H., \& {Raimond}, E. 1963, \bibinfo{title}{{Hydrog{\`e}ne neutre dans la couronne galactique?},} Academie des Sciences Paris Comptes Rendus, 257, 1661
+
+% type= article
+\bibitem[{R. {Nan} {et~al.}(2011){Nan}, {Li}, {Jin}, {Wang}, {Zhu}, {Zhu}, {Zhang}, {Yue}, \& {Qian}}]{2011IJMPD..20..989N}
+{Nan}, R., {Li}, D., {Jin}, C., {et~al.} 2011, \bibinfo{title}{{The Five-Hundred Aperture Spherical Radio Telescope (fast) Project},} International Journal of Modern Physics D, 20, 989, \dodoi{10.1142/S0218271811019335}
+
+% type= article
+\bibitem[{J.~H. {Oort}(1966){Oort}}]{1966BAN....18..421O}
+{Oort}, J.~H. 1966, \bibinfo{title}{{Possible Interpretations of the High-Velocity Clouds},} \bain, 18, 421
+
+% type= article
+\bibitem[{M.~E. {Putman} {et~al.}(2002){Putman}, {de Heij}, {Staveley-Smith}, {Braun}, {Freeman}, {Gibson}, {Burton}, {Barnes}, {Banks}, {Bhathal}, \& et~al.}]{2002AJ....123..873P}
+{Putman}, M.~E., {de Heij}, V., {Staveley-Smith}, L., {et~al.} 2002, \bibinfo{title}{{HIPASS High-Velocity Clouds: Properties of the Compact and Extended Populations},} \aj, 123, 873, \dodoi{10.1086/338088}
 
 % type= inproceedings
 \bibitem[{V. Satopaa {et~al.}(2011)Satopaa, Albrecht, Irwin, \& Raghavan}]{satopaa2011finding}
 Satopaa, V., Albrecht, J., Irwin, D., \& Raghavan, B. 2011, \bibinfo{title}{Finding a" kneedle" in a haystack: Detecting knee points in system behavior,} in 2011 31st international conference on distributed computing systems workshops, IEEE, 166--171
+
+% type= article
+\bibitem[{D.~R. {Saul} {et~al.}(2012){Saul}, {Peek}, {Grcevich}, {Putman}, {Douglas}, {Korpela}, {Stanimirovi{\'c}}, {Heiles}, {Gibson}, {Lee}, \& et~al.}]{2012ApJ...758...44S}
+{Saul}, D.~R., {Peek}, J.~E.~G., {Grcevich}, J., {et~al.} 2012, \bibinfo{title}{{The GALFA-H I Compact Cloud Catalog},} \apj, 758, 44, \dodoi{10.1088/0004-637X/758/1/44}
+
+% type= article
+\bibitem[{A. {Sternberg} {et~al.}(2002){Sternberg}, {McKee}, \& {Wolfire}}]{2002ApJS..143..419S}
+{Sternberg}, A., {McKee}, C.~F., \& {Wolfire}, M.~G. 2002, \bibinfo{title}{{Atomic Hydrogen Gas in Dark Matter Minihalos and the Compact High-Velocity Clouds},} \apjs, 143, 419, \dodoi{10.1086/343032}
+
+% type= article
+\bibitem[{B.~P. {Wakker}(1991){Wakker}}]{1991A&A...250..499W}
+{Wakker}, B.~P. 1991, \bibinfo{title}{{Distribution and origin of high-velocity clouds. II. Statistical analysisof the whole-sky survey.},} \aap, 250, 499
+
+% type= article
+\bibitem[{B.~P. {Wakker} \& H. {van Woerden}(1991){Wakker} \& {van Woerden}}]{1991A&A...250..509W}
+{Wakker}, B.~P., \& {van Woerden}, H. 1991, \bibinfo{title}{{Distribution and origin of high-velocity clouds. III. Clouds, complexes and populations.},} \aap, 250, 509
+
+% type= article
+\bibitem[{T. {Westmeier}(2018){Westmeier}}]{2018MNRAS.474..289W}
+{Westmeier}, T. 2018, \bibinfo{title}{{A new all-sky map of Galactic high-velocity clouds from the 21-cm HI4PI survey},} \mnras, 474, 289, \dodoi{10.1093/mnras/stx2757}
+
+% type= article
+\bibitem[{Q.-Z. {Yan} {et~al.}(2020){Yan}, {Yang}, {Su}, {Sun}, \& {Wang}}]{2020ApJ...898...80Y}
+{Yan}, Q.-Z., {Yang}, J., {Su}, Y., {Sun}, Y., \& {Wang}, C. 2020, \bibinfo{title}{{Distances and Statistics of Local Molecular Clouds in the First Galactic Quadrant},} \apj, 898, 80, \dodoi{10.3847/1538-4357/ab9f9c}
+
+% type= article
+\bibitem[{L. {Yuan} {et~al.}(2022){Yuan}, {Yang}, {Du}, {Su}, {Liu}, {Zhang}, {Sun}, {Zhou}, {Yan}, \& {Ma}}]{2022ApJS..261...37Y}
+{Yuan}, L., {Yang}, J., {Du}, F., {et~al.} 2022, \bibinfo{title}{{Molecular Gas Structures Traced by $^{13}$CO Emission in the 18,190 $^{12}$CO Molecular Clouds from the MWISP Survey},} \apjs, 261, 37, \dodoi{10.3847/1538-4365/ac739f}
 
 \end{thebibliography}
