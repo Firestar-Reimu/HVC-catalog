@@ -1,6 +1,7 @@
 \documentclass[twocolumn,trackchanges]{aastex701}
 \usepackage{newtx}
 \usepackage{anyfontsize}
+\usepackage{subcaption}
 
 \begin{document}
 
@@ -161,7 +162,6 @@ The pipeline identifies clouds with properties shown in Table \ref{cloud_propert
 \begin{rotatetable*}
 \begin{deluxetable*}{ccccccccccccccc}
 \tablecaption{HI Cloud Properties}
-\tablewidth{1\linewidth}
 \tablehead{
     \colhead{ID} & \colhead{RA} & \colhead{Dec} &
     \colhead{$v_\mathrm{LSR}$} & \colhead{$v_\mathrm{GSR}$} & \colhead{$v_\mathrm{dev}$} & \colhead{SIZEa} & \colhead{SIZEb} &
@@ -192,7 +192,20 @@ HVC231.64+7.80+158  & 07:54:41 & -12:45:38 & 158.01 & -12.90 &  65.46 &   6.43 &
 \end{deluxetable*}
 \end{rotatetable*}
 
-\clearpage
+\begin{deluxetable*}{ccccccccc}
+\tablecaption{Statistical Cloud Properties in the Test Region}
+\tablehead{
+    \colhead{Type} & \colhead{$v_\mathrm{LSR}$} & \colhead{$v_\mathrm{GSR}$} & \colhead{$v_\mathrm{dev}$} & \colhead{Area} &
+    \colhead{SNR} & \colhead{FWHM} & \colhead{TPKB} & \colhead{N\_HI} \\
+    (km/s) & (km/s) & (km/s) & $\mathrm{deg}^2$ & - & (km/s) & (K) & ($10^{18}\,\mathrm{cm^{-2}}$)
+}
+\startdata
+IVC & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 \\
+HVC & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 \\
+\enddata
+\tablecomments{Median properties of detected HI clouds in the test region, separated by type (IVC and HVC). The columns represent the median values of LSR velocity, GSR velocity, deviation velocity, area, signal-to-noise ratio, FWHM, peak brightness temperature, and column density for each type of cloud.}
+\label{median_cloud_properties}
+\end{deluxetable*}
 
 \section{Discussion}
 
@@ -209,12 +222,9 @@ W18 creates a map of HVCs in the Milky Way from the HI4PI survey data using a mo
 
 \subsection{Sensitivity limits and completeness}
 
-Based on the detections in the test region, it is instructive to estimate the expected yield of the pipeline when applied to larger-area surveys. In the analyzed field, covering an area of $66\,\mathrm{deg^2}$, we identify 17 compact high-velocity clouds using the pipeline described above. Assuming comparable data quality and noise properties, a simple area scaling suggests that the number of detections scales approximately with survey area. Under this assumption, the expected number of HVC detections over an area
+Based on the detections in the test region, it is instructive to estimate the expected yield of the pipeline when applied to larger-area surveys. In the analyzed field, covering an area of $66\,\mathrm{deg^2}$, we identify 17 compact clouds using the pipeline described above, 4 of them are CHVCs and 13 of them are CIVCs. Assuming comparable data quality and noise properties, a simple area scaling suggests that the number of detections scales approximately with survey area. Applying this scaling to the planned CRAFTS sky coverage ($-13^\circ < \delta < 67^\circ$, or about $20000\,\mathrm{deg^2}$), we expect to detect approximately 1200 compact HVC candidates and 4000 compact IVC candidates. This estimate should be regarded as an order-of-magnitude indication of pipeline scalability rather than a definitive census, as the sky distribution of HVCs is known to be anisotropic and correlated with Galactic latitude. This test region has zero detections on HI4PI HVC map, which may be due to the fact that the moment-mask method used in W18 is not sensitive enough to detect these faint and small clouds, while our DBSCAN method can find them. Therefore, the actual number of compact HVCs in the CRAFTS survey may be higher than this estimate, especially for those with low column densities that are below the detection threshold of previous surveys.
 
-
-Applying this scaling to the planned CRAFTS sky coverage (
-
- compact HVC candidates. This estimate should be regarded as an order-of-magnitude indication of pipeline scalability rather than a definitive census, as the sky distribution of HVCs is known to be anisotropic and correlated with Galactic latitude.
+If we consider the sensitivity limits and the function of sky coverage fraction and HI column density, we can further refine this estimate. The sensitivity of the CRAFTS HI data allows us to detect clouds with column densities down to approximately $10^{18}\,\mathrm{cm^{-2}}$ at a 5-sigma level for typical line widths of . Given the observed distribution of HVC column densities, we can expect to detect a significant fraction of the compact HVC population within this sensitivity range. However, completeness will be affected by factors such as confusion with Galactic emission, especially at lower velocities, and the presence of RFI.
 
 Nevertheless, this exercise demonstrates that the pipeline is capable of producing a statistically significant sample of compact HVCs when applied to large-area FAST surveys, providing a solid foundation for subsequent catalog construction and astrophysical analysis.
 
@@ -224,5 +234,90 @@ Nevertheless, this exercise demonstrates that the pipeline is capable of produci
 
 \bibliography{reference.bib}
 \bibliographystyle{aasjournalv7}
+
+\begin{figure*}[htb!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/HVC and IVC Candidates in CRAFTS Test Region (Moment 0 with IDs).png}
+    \caption{HVC map produced by DBSCAN from FAST HI data in the test region. The color map shows the HI column density (moment 0) of the detected clouds, and the labels indicate the IDs of the clouds.}
+    \label{fig:moment_0}
+\end{figure*}
+
+\begin{figure*}[htb!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/HVC and IVC Candidates in CRAFTS Test Region (Moment 1 with IDs).png}
+    \caption{HVC map produced by DBSCAN from FAST HI data in the test region. The color map shows the LSR velocity (moment 1) of the detected clouds, and the labels indicate the IDs of the clouds.}
+    \label{fig:moment_1}
+\end{figure*}
+
+% 10_HVC233.93+11.34+131.png  14_HVC230.35+5.70+146.png  1_HVC231.71+9.98+80.png    5_HVC231.86+12.28+112.png  9_HVC231.64+9.37+128.png
+% 11_HVC230.06+4.76+133.png   15_HVC229.50+5.44+146.png  2_HVC227.20+10.38+95.png   6_HVC232.15+13.54+115.png
+% 12_HVC230.20+5.37+135.png   16_HVC229.96+7.56+150.png  3_HVC230.61+15.52+100.png  7_HVC232.39+9.95+122.png
+% 13_HVC229.50+6.65+138.png   17_HVC231.64+7.80+158.png  4_HVC232.97+13.95+106.png  8_HVC232.52+9.34+126.png
+
+
+\begin{figure}[htb!]
+    \centering
+    % 第一行：4个子图
+    \begin{subfigure}[b]{0.33\textwidth}
+        \includegraphics[width=\linewidth]{./Figures/HVCs/1_HVC231.71+9.98+80.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.33\textwidth}
+        \includegraphics[width=\linewidth]{./Figures/HVCs/2_HVC227.20+10.38+95.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.33\textwidth}
+        \includegraphics[width=\linewidth]{./Figures/HVCs/3_HVC230.61+15.52+100.png}
+    \end{subfigure}
+    \\
+    \begin{subfigure}[b]{0.33\textwidth}
+        \includegraphics[width=\linewidth]{./Figures/HVCs/4_HVC232.97+13.95+106.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.33\textwidth}
+        \includegraphics[width=\linewidth]{./Figures/HVCs/5_HVC231.86+12.28+112.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.33\textwidth}
+        \includegraphics[width=\linewidth]{./Figures/HVCs/6_HVC232.15+13.54+115.png}
+    \end{subfigure}
+    \\
+    \begin{subfigure}[b]{0.33\textwidth}
+        \includegraphics[width=\linewidth]{./Figures/HVCs/7_HVC232.39+9.95+122.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.33\textwidth}
+        \includegraphics[width=\linewidth]{./Figures/HVCs/8_HVC232.52+9.34+126.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.33\textwidth}
+        \includegraphics[width=\linewidth]{./Figures/HVCs/9_HVC231.64+9.37+128.png}
+    \end{subfigure}
+    \\
+    \begin{subfigure}[b]{0.33\textwidth}
+        \includegraphics[width=\linewidth]{./Figures/HVCs/10_HVC233.93+11.34+131.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.33\textwidth}
+        \includegraphics[width=\linewidth]{./Figures/HVCs/11_HVC230.06+4.76+133.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.33\textwidth}
+        \includegraphics[width=\linewidth]{./Figures/HVCs/12_HVC230.20+5.37+135.png}
+    \end{subfigure}
+    \\
+    \begin{subfigure}[b]{0.33\textwidth}
+        \includegraphics[width=\linewidth]{./Figures/HVCs/13_HVC229.50+6.65+138.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.33\textwidth}
+        \includegraphics[width=\linewidth]{./Figures/HVCs/14_HVC230.35+5.70+146.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.33\textwidth}
+        \includegraphics[width=\linewidth]{./Figures/HVCs/15_HVC229.50+5.44+146.png}
+    \end{subfigure}
+    \\
+    \begin{subfigure}[b]{0.33\textwidth}
+        \includegraphics[width=\linewidth]{./Figures/HVCs/16_HVC229.96+7.56+150.png}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.33\textwidth}
+        \includegraphics[width=\linewidth]{./Figures/HVCs/17_HVC231.64+7.80+158.png}
+    \end{subfigure}
+    \\
+    \caption{HVC and IVC candidates in the test region.}
+    \label{fig:candidates}
+\end{figure}
+
 
 \end{document}
